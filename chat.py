@@ -29,7 +29,7 @@ DEFAULT_EXIT_COMMANDS = {"exit", "quit", "q", ":q"}
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="使用 soul.md 作为系统提示词进行问答，支持 Ollama 与 Claude 反思循环")
     parser.add_argument("--backend", choices=("ollama", "claude"), default="ollama", help="后端类型，默认 ollama")
-    parser.add_argument("--model", default="qwen3.5:9b", help="Ollama 模型名，默认 qwen3.5:9b")
+    parser.add_argument("--model", default="qwen3.5:0.8b", help="Ollama 模型名，默认 qwen3.5:0.8b")
     parser.add_argument("--claude-command", default="claude", help="Claude CLI 命令名，默认 claude")
     parser.add_argument("--soul", default="soul.md", help="soul.md 路径，默认当前目录下的 soul.md")
     parser.add_argument("--meta", default="", help="可选，附加加载的 soul.meta.yaml 路径")
