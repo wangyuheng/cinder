@@ -7,44 +7,44 @@
 
 ## [2.2.0] - 2026-04-04
 
-### Added
-- Strict PGE (Plan-Generation-Evaluation) executor flow
-  - Enhanced task planning with LLM-based goal understanding
-  - Iterative code generation with self-evaluation
-  - Comprehensive evaluation with Soul consistency checking
-  - Strict phase separation (Plan → Generation → Evaluation → Decision)
-- Quality thresholds configuration
-  - plan_quality_threshold (default: 0.7)
-  - code_quality_threshold (default: 0.8)
-  - evaluation_quality_threshold (default: 0.7)
-- Iterative generation configuration
-  - enable_iterative_generation (default: true)
-  - enable_comprehensive_evaluation (default: true)
-- Multi-dimensional code evaluation
-  - Syntax quality checking
-  - Logic quality assessment
-  - Style quality evaluation
-  - Documentation quality scoring
-- Soul consistency checking
-  - Risk tolerance alignment
-  - Structure preference alignment
-  - Detail orientation alignment
-- Risk assessment functionality
-  - Security risk detection
-  - Performance risk identification
-  - Maintainability risk analysis
+### 新增
+- 严格 PGE (Plan-Generation-Evaluation) 执行流程
+  - 增强的任务规划，使用 LLM 进行目标理解
+  - 迭代式代码生成，包含自我评估
+  - 全面评估，包含 Soul 一致性检查
+  - 严格的阶段分离 (Plan → Generation → Evaluation → Decision)
+- 质量阈值配置
+  - plan_quality_threshold (默认: 0.7)
+  - code_quality_threshold (默认: 0.8)
+  - evaluation_quality_threshold (默认: 0.7)
+- 迭代生成配置
+  - enable_iterative_generation (默认: true)
+  - enable_comprehensive_evaluation (默认: true)
+- 多维度代码评估
+  - 语法质量检查
+  - 逻辑质量评估
+  - 风格质量评价
+  - 文档质量评分
+- Soul 一致性检查
+  - 风险容忍度对齐
+  - 结构偏好对齐
+  - 细节导向对齐
+- 风险评估功能
+  - 安全风险检测
+  - 性能风险识别
+  - 可维护性风险分析
 
-### Changed
-- Refactored AutonomousExecutor to use strict phase separation
-- Enhanced TaskPlanner with LLM-based goal understanding
-- Improved CodeGenerator with iterative generation loop
-- Enhanced ReflectionEngine with comprehensive evaluation
+### 变更
+- 重构 AutonomousExecutor 使用严格的阶段分离
+- 增强 TaskPlanner，使用 LLM 进行目标理解
+- 改进 CodeGenerator，添加迭代生成循环
+- 增强 ReflectionEngine，实现全面评估
 
-### Technical Details
-- Plan phase: decompose_goal_with_validation() with quality scoring
-- Generation phase: generate_with_iterations() with self-evaluation
-- Evaluation phase: evaluate_comprehensive() with Soul alignment
-- Decision phase: Soul-based decision making after Evaluation
+### 技术细节
+- Plan 阶段: decompose_goal_with_validation() 包含质量评分
+- Generation 阶段: generate_with_iterations() 包含自我评估
+- Evaluation 阶段: evaluate_comprehensive() 包含 Soul 对齐
+- Decision 阶段: Evaluation 后基于 Soul 的决策
 
 ## [2.1.0] - 2026-04-04
 

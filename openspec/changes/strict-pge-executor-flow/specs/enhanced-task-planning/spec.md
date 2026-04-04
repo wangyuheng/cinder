@@ -1,67 +1,67 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Goal Understanding
-The system SHALL analyze the goal using LLM to extract semantic meaning, key requirements, and constraints.
+### 需求: 目标理解
+系统应当使用 LLM 分析目标以提取语义含义、关键需求和约束条件。
 
-#### Scenario: Understand complex goal
-- **WHEN** user provides a complex goal like "创建一个支持用户认证和权限管理的Web应用"
-- **THEN** system extracts semantic components: "Web应用", "用户认证", "权限管理", and identifies dependencies between them
+#### 场景: 理解复杂目标
+- **当** 用户提供复杂目标如"创建一个支持用户认证和权限管理的Web应用"
+- **则** 系统提取语义组件："Web应用"、"用户认证"、"权限管理"，并识别它们之间的依赖关系
 
-#### Scenario: Identify constraints
-- **WHEN** user provides a goal with constraints like "做个记账web应用 --framework fastapi --language python"
-- **THEN** system extracts both the goal "记账web应用" and constraints "framework=fastapi, language=python"
+#### 场景: 识别约束条件
+- **当** 用户提供带约束的目标如"做个记账web应用 --framework fastapi --language python"
+- **则** 系统提取目标"记账web应用"和约束条件"framework=fastapi, language=python"
 
-### Requirement: Plan Generation
-The system SHALL generate a structured task plan with dependencies, complexity estimates, and file paths.
+### 需求: 计划生成
+系统应当生成结构化的任务计划，包含依赖关系、复杂度估算和文件路径。
 
-#### Scenario: Generate task plan
-- **WHEN** goal understanding is complete
-- **THEN** system generates a task tree with:
-  - Unique task IDs
-  - Task descriptions
-  - Dependencies between tasks
-  - Estimated complexity scores
-  - Target file paths
+#### 场景: 生成任务计划
+- **当** 目标理解完成
+- **则** 系统生成任务树，包含：
+  - 唯一任务 ID
+  - 任务描述
+  - 任务间依赖关系
+  - 估算的复杂度分数
+  - 目标文件路径
 
-#### Scenario: Build dependency graph
-- **WHEN** multiple tasks are generated
-- **THEN** system builds a dependency graph showing execution order
+#### 场景: 构建依赖图
+- **当** 生成多个任务
+- **则** 系统构建依赖图显示执行顺序
 
-### Requirement: Plan Validation
-The system SHALL validate the generated plan for completeness, feasibility, and quality before proceeding to execution.
+### 需求: 计划验证
+系统应当在进入执行阶段前验证生成计划的完整性、可行性和质量。
 
-#### Scenario: Validate plan completeness
-- **WHEN** a plan is generated
-- **THEN** system checks:
-  - All requirements from goal are covered
-  - Dependencies are properly ordered
-  - No circular dependencies exist
+#### 场景: 验证计划完整性
+- **当** 生成计划
+- **则** 系统检查：
+  - 目标的所有需求都已覆盖
+  - 依赖关系正确排序
+  - 不存在循环依赖
 
-#### Scenario: Validate plan feasibility
-- **WHEN** a plan is validated
-- **THEN** system checks:
-  - Required technologies are available
-  - File paths are valid
-  - Complexity estimates are reasonable
+#### 场景: 验证计划可行性
+- **当** 验证计划
+- **则** 系统检查：
+  - 所需技术可用
+  - 文件路径有效
+  - 复杂度估算合理
 
-#### Scenario: Reject low-quality plan
-- **WHEN** plan validation score is below 0.7
-- **THEN** system either regenerates the plan or requests user clarification
+#### 场景: 拒绝低质量计划
+- **当** 计划验证分数低于 0.7
+- **则** 系统重新生成计划或请求用户澄清
 
-### Requirement: Plan Quality Scoring
-The system SHALL assign a quality score to each generated plan based on completeness, clarity, and feasibility.
+### 需求: 计划质量评分
+系统应当为每个生成的计划分配质量分数，基于完整性、清晰度和可行性。
 
-#### Scenario: Calculate plan quality score
-- **WHEN** plan validation is complete
-- **THEN** system calculates a quality score (0.0-1.0) based on:
-  - Requirement coverage (40%)
-  - Dependency correctness (30%)
-  - Feasibility (30%)
+#### 场景: 计算计划质量分数
+- **当** 计划验证完成
+- **则** 系统计算质量分数 (0.0-1.0)，基于：
+  - 需求覆盖率 (40%)
+  - 依赖正确性 (30%)
+  - 可行性 (30%)
 
-#### Scenario: High-quality plan
-- **WHEN** plan quality score is >= 0.8
-- **THEN** system proceeds to Generation phase
+#### 场景: 高质量计划
+- **当** 计划质量分数 >= 0.8
+- **则** 系统进入生成阶段
 
-#### Scenario: Low-quality plan
-- **WHEN** plan quality score is < 0.7
-- **THEN** system regenerates plan with feedback or asks user for clarification
+#### 场景: 低质量计划
+- **当** 计划质量分数 < 0.7
+- **则** 系统重新生成计划并提供反馈，或请求用户澄清
