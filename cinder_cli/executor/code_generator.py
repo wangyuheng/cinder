@@ -19,6 +19,8 @@ class CodeGenerator:
         self.temperature = config.get("temperature", 0.2)
         self.base_url = config.get("ollama_base_url", "http://localhost:11434")
         self.keep_alive = config.get("ollama_keep_alive", "10m")
+        self.stream = config.get("ollama_stream", True)
+        self.debug = config.get("ollama_debug", False)
         self.client = ollama.Client(host=self.base_url)
 
     def generate_code(
@@ -41,22 +43,57 @@ class CodeGenerator:
         system_prompt = self._build_system_prompt(language, constraints)
         user_prompt = self._build_user_prompt(description, language)
 
-        try:
-            response = self.client.chat(
-                model=self.model_name,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                options={
-                    "temperature": self.temperature,
-                    "num_ctx": 4096,
-                    "think": False,
-                },
-                keep_alive=self.keep_alive,
-            )
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
 
-            code = response.get("message", {}).get("content", "")
+        options = {
+            "temperature": self.temperature,
+            "num_ctx": 4096,
+            "think": False,
+        }
+
+        if self.debug:
+            print(f"\n[DEBUG] Ollama Request:")
+            print(f"  Model: {self.model_name}")
+            print(f"  Messages: {messages}")
+            print(f"  Options: {options}")
+            print(f"  Keep Alive: {self.keep_alive}")
+            print(f"  Stream: {self.stream}\n")
+
+        try:
+            if self.stream:
+                code_chunks = []
+                print("[STREAM] ", end="", flush=True)
+                
+                for chunk in self.client.chat(
+                    model=self.model_name,
+                    messages=messages,
+                    options=options,
+                    keep_alive=self.keep_alive,
+                    stream=True,
+                ):
+                    content = chunk.get("message", {}).get("content", "")
+                    if content:
+                        print(content, end="", flush=True)
+                        code_chunks.append(content)
+                
+                print()  # New line after streaming
+                code = "".join(code_chunks)
+            else:
+                response = self.client.chat(
+                    model=self.model_name,
+                    messages=messages,
+                    options=options,
+                    keep_alive=self.keep_alive,
+                )
+                code = response.get("message", {}).get("content", "")
+
+            if self.debug:
+                print(f"\n[DEBUG] Ollama Response:")
+                print(f"  Code length: {len(code)} characters")
+                print(f"  First 200 chars: {code[:200]}...\n")
 
             # Extract code from markdown if present
             code = self._extract_code(code)
@@ -64,7 +101,10 @@ class CodeGenerator:
             return code
 
         except Exception as e:
-            return f"# Error generating code: {e}\n# Description: {description}"
+            error_msg = f"# Error generating code: {e}\n# Description: {description}"
+            if self.debug:
+                print(f"\n[DEBUG] Error: {e}\n")
+            return error_msg
 
     def _build_system_prompt(
         self,

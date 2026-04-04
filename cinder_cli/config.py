@@ -29,6 +29,9 @@ class Config:
         "log_retention_days": 90,
         "encryption": False,
         "workspace_dir": "",
+        "ollama_keep_alive": "10m",
+        "ollama_stream": True,
+        "ollama_debug": True,
     }
 
     def __init__(self, config_dir: Path | None = None):
