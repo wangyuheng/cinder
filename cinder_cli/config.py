@@ -32,6 +32,12 @@ class Config:
         "ollama_keep_alive": "10m",
         "ollama_stream": True,
         "ollama_debug": True,
+        "plan_quality_threshold": 0.7,
+        "code_quality_threshold": 0.8,
+        "evaluation_quality_threshold": 0.7,
+        "enable_iterative_generation": True,
+        "enable_plan_validation": True,
+        "enable_comprehensive_evaluation": True,
     }
 
     def __init__(self, config_dir: Path | None = None):

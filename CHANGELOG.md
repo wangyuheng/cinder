@@ -5,6 +5,47 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.2.0] - 2026-04-04
+
+### Added
+- Strict PGE (Plan-Generation-Evaluation) executor flow
+  - Enhanced task planning with LLM-based goal understanding
+  - Iterative code generation with self-evaluation
+  - Comprehensive evaluation with Soul consistency checking
+  - Strict phase separation (Plan → Generation → Evaluation → Decision)
+- Quality thresholds configuration
+  - plan_quality_threshold (default: 0.7)
+  - code_quality_threshold (default: 0.8)
+  - evaluation_quality_threshold (default: 0.7)
+- Iterative generation configuration
+  - enable_iterative_generation (default: true)
+  - enable_comprehensive_evaluation (default: true)
+- Multi-dimensional code evaluation
+  - Syntax quality checking
+  - Logic quality assessment
+  - Style quality evaluation
+  - Documentation quality scoring
+- Soul consistency checking
+  - Risk tolerance alignment
+  - Structure preference alignment
+  - Detail orientation alignment
+- Risk assessment functionality
+  - Security risk detection
+  - Performance risk identification
+  - Maintainability risk analysis
+
+### Changed
+- Refactored AutonomousExecutor to use strict phase separation
+- Enhanced TaskPlanner with LLM-based goal understanding
+- Improved CodeGenerator with iterative generation loop
+- Enhanced ReflectionEngine with comprehensive evaluation
+
+### Technical Details
+- Plan phase: decompose_goal_with_validation() with quality scoring
+- Generation phase: generate_with_iterations() with self-evaluation
+- Evaluation phase: evaluate_comprehensive() with Soul alignment
+- Decision phase: Soul-based decision making after Evaluation
+
 ## [2.1.0] - 2026-04-04
 
 ### 新增
