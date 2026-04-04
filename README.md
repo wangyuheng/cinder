@@ -9,6 +9,7 @@
 - **代理决策**：基于你的 soul 偏好，agent 可代为决策
 - **决策日志**：追踪和分析所有代理决策
 - **多后端支持**：支持 Ollama 和 Claude
+- **自主任务执行**：从自然语言目标到实际代码文件的端到端自动化
 
 ## 安装
 
@@ -96,6 +97,34 @@ cinder config backend ollama
 cinder config --reset
 ```
 
+### 6. 自主任务执行
+
+```bash
+# 执行自然语言目标
+cinder execute "创建一个Python Hello World程序"
+
+# 预览执行计划（不创建文件）
+cinder execute "做个记账web应用" --mode dry-run
+
+# 交互式执行
+cinder execute "创建API" --mode interactive
+
+# 指定框架和语言
+cinder execute "创建REST API" --framework fastapi --language python
+
+# 添加约束条件
+cinder execute "创建Web应用" --constraint "database=postgresql" --constraint "auth=jwt"
+
+# 查看执行历史
+cinder execution list
+
+# 查看执行详情
+cinder execution show 1
+
+# 回滚执行
+cinder execution rollback 1
+```
+
 ## 命令参考
 
 ### `cinder init`
@@ -146,6 +175,35 @@ cinder config --reset
 **选项：**
 - `--list`: 列出所有配置
 - `--reset`: 重置为默认配置
+
+### `cinder execute`
+
+自主执行自然语言目标。
+
+**参数：**
+- `GOAL`: 自然语言描述的目标
+
+**选项：**
+- `--mode`: 执行模式 (auto, interactive, dry-run)
+- `--constraint`: 约束条件 (key=value 格式，可多次使用)
+- `--language`: 编程语言 (默认: python)
+- `--framework`: 使用的框架
+
+**示例：**
+```bash
+cinder execute "创建一个Python脚本"
+cinder execute "做个记账web应用" --mode dry-run
+cinder execute "创建API" --framework fastapi --language python
+```
+
+### `cinder execution`
+
+管理执行历史和日志。
+
+**子命令：**
+- `list`: 列出执行历史
+- `show`: 显示执行详情
+- `rollback`: 回滚执行
 
 ## 全局选项
 
@@ -246,6 +304,28 @@ cinder decisions list --min-confidence 0.5
 # 标记决策为正确/错误
 cinder decisions review 1 --correct
 cinder decisions review 2 --incorrect --reason "风险太高"
+```
+
+### 示例 4：自主任务执行
+
+```bash
+# 创建简单的 Python 脚本
+cinder execute "创建一个计算斐波那契数列的Python函数"
+
+# 创建 Web 应用（预览模式）
+cinder execute "做个记账web应用" --mode dry-run
+
+# 创建 FastAPI 项目
+cinder execute "创建用户管理API" --framework fastapi --language python
+
+# 查看执行历史
+cinder execution list
+
+# 查看执行详情
+cinder execution show 1 --format json
+
+# 如果不满意，可以回滚
+cinder execution rollback 1
 ```
 
 ## 从旧 CLI 迁移

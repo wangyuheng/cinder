@@ -1,0 +1,186 @@
+# Executor Configuration
+# 执行器配置示例
+
+# =============================================================================
+# Execution Strategy
+# =============================================================================
+
+# Maximum execution time in seconds
+execution_timeout: 300
+
+# Maximum number of reflection iterations
+max_reflection_iterations: 3
+
+# Quality threshold for code approval (0.0 - 1.0)
+quality_threshold: 0.7
+
+# Enable automatic code formatting
+auto_format: true
+
+# Enable automatic testing
+auto_test: false
+
+# =============================================================================
+# Security Settings
+# =============================================================================
+
+# Working directory restriction (relative to project root or absolute path)
+working_directory: "."
+
+# Allowed file extensions
+allowed_extensions:
+  - ".py"
+  - ".js"
+  - ".ts"
+  - ".html"
+  - ".css"
+  - ".json"
+  - ".yaml"
+  - ".yml"
+  - ".md"
+  - ".txt"
+  - ".sh"
+
+# Enable backup before file modifications
+enable_backup: true
+
+# Backup retention days
+backup_retention_days: 30
+
+# Require confirmation for file deletion
+confirm_deletion: true
+
+# Maximum file size (in bytes)
+max_file_size: 1048576  # 1 MB
+
+# =============================================================================
+# Code Generation Settings
+# =============================================================================
+
+# Ollama configuration
+ollama_base_url: "http://192.168.18.123:11434"
+model: "qwen3.5:0.8b"
+ollama_keep_alive: "10m"
+
+# Default programming language
+default_language: "python"
+
+# Language-specific settings
+languages:
+  python:
+    formatter: "black"
+    linter: "ruff"
+    type_checker: "mypy"
+    test_framework: "pytest"
+  
+  javascript:
+    formatter: "prettier"
+    linter: "eslint"
+    test_framework: "jest"
+  
+  typescript:
+    formatter: "prettier"
+    linter: "eslint"
+    type_checker: "tsc"
+    test_framework: "jest"
+
+# Framework preferences
+frameworks:
+  web_backend:
+    - "fastapi"
+    - "flask"
+    - "django"
+  
+  web_frontend:
+    - "react"
+    - "vue"
+    - "svelte"
+
+# Code style preferences
+code_style:
+  indent_size: 4
+  max_line_length: 100
+  use_tabs: false
+  insert_final_newline: true
+
+# =============================================================================
+# Task Planning Settings
+# =============================================================================
+
+# Maximum task decomposition depth
+max_decomposition_depth: 5
+
+# Enable parallel task execution
+enable_parallel_execution: false
+
+# Task complexity estimation model
+complexity_model: "heuristic"  # heuristic, ml
+
+# =============================================================================
+# Reflection Settings
+# =============================================================================
+
+# Enable reflection engine
+enable_reflection: true
+
+# Reflection dimensions
+reflection_dimensions:
+  - "risk_consistency"
+  - "style_consistency"
+  - "code_quality"
+  - "completeness"
+
+# Minimum confidence score for auto-approval
+auto_approval_threshold: 0.8
+
+# =============================================================================
+# Logging Settings
+# =============================================================================
+
+# Enable execution logging
+enable_logging: true
+
+# Log level: DEBUG, INFO, WARNING, ERROR
+log_level: "INFO"
+
+# Enable detailed logging
+detailed_logging: false
+
+# Log file path (relative to working directory)
+log_file: ".cinder/execution.log"
+
+# =============================================================================
+# Performance Settings
+# =============================================================================
+
+# Enable caching for code generation
+enable_cache: true
+
+# Cache directory
+cache_directory: ".cinder/cache"
+
+# Cache expiration time (in seconds)
+cache_expiration: 3600  # 1 hour
+
+# =============================================================================
+# Example Configurations
+# =============================================================================
+
+# For conservative users:
+#   quality_threshold: 0.9
+#   auto_approval_threshold: 0.95
+#   confirm_deletion: true
+#   enable_backup: true
+
+# For experimental users:
+#   quality_threshold: 0.6
+#   auto_approval_threshold: 0.7
+#   confirm_deletion: false
+#   enable_parallel_execution: true
+
+# For production use:
+#   quality_threshold: 0.8
+#   auto_approval_threshold: 0.85
+#   enable_reflection: true
+#   enable_logging: true
+#   detailed_logging: true

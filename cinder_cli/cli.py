@@ -361,6 +361,214 @@ def review_decision(
 
 
 @cli.command()
+@click.argument("goal")
+@click.option("--mode", type=click.Choice(["auto", "interactive", "dry-run"]), default="auto", help="Execution mode")
+@click.option("--constraint", multiple=True, help="Constraints (key=value format)")
+@click.option("--language", default="python", help="Programming language for code generation")
+@click.option("--framework", help="Framework to use (e.g., fastapi, flask)")
+@click.pass_context
+def execute(
+    ctx: click.Context,
+    goal: str,
+    mode: str,
+    constraint: tuple[str, ...],
+    language: str,
+    framework: str | None,
+) -> None:
+    """
+    Execute a goal autonomously using AI.
+    
+    Example:
+        cinder execute "创建一个Python Hello World程序"
+        cinder execute "做个记账web应用" --mode interactive
+        cinder execute "创建API" --framework fastapi --language python
+    """
+    from cinder_cli.executor import AutonomousExecutor
+
+    config: Config = ctx.obj["config"]
+    
+    # Parse constraints
+    constraints = {}
+    for c in constraint:
+        if "=" in c:
+            key, value = c.split("=", 1)
+            constraints[key.strip()] = value.strip()
+    
+    if framework:
+        constraints["framework"] = framework
+    if language:
+        constraints["language"] = language
+    
+    # Create executor and run
+    executor = AutonomousExecutor(config)
+    
+    try:
+        result = executor.execute(goal, mode=mode, constraints=constraints)
+        
+        if result["status"] == "success":
+            click.echo(f"\n✓ 执行成功！")
+            click.echo(f"创建了 {len(result.get('results', []))} 个文件")
+        elif result["status"] == "dry-run":
+            click.echo("\n预览完成，未创建实际文件")
+    except Exception as e:
+        click.echo(f"\n✗ 执行失败: {e}", err=True)
+
+
+@cli.group()
+@click.pass_context
+def execution(ctx: click.Context) -> None:
+    """
+    Manage execution history and logs.
+    """
+    pass
+
+
+@execution.command("list")
+@click.option("--limit", default=10, help="Number of executions to show")
+@click.option("--status", type=click.Choice(["success", "failed", "all"]), default="all", help="Filter by status")
+@click.pass_context
+def list_executions(
+    ctx: click.Context,
+    limit: int,
+    status: str,
+) -> None:
+    """
+    List execution history.
+    """
+    from cinder_cli.executor import ExecutionLogger
+
+    config: Config = ctx.obj["config"]
+    logger = ExecutionLogger(config)
+    
+    status_filter = None if status == "all" else status
+    executions = logger.list_executions(limit=limit, status=status_filter)
+    
+    if not executions:
+        click.echo("No executions found.")
+        return
+    
+    for execution in executions:
+        click.echo(f"\n[{execution['id']}] {execution['timestamp']}")
+        click.echo(f"  Goal: {execution['goal'][:100]}...")
+        click.echo(f"  Status: {execution['status']}")
+        click.echo(f"  Files: {len(execution.get('created_files', []))}")
+
+
+@execution.command("show")
+@click.argument("execution_id", type=int)
+@click.option("--format", type=click.Choice(["text", "json"]), default="text")
+@click.pass_context
+def show_execution(
+    ctx: click.Context,
+    execution_id: int,
+    format: str,
+) -> None:
+    """
+    Show detailed information about a specific execution.
+    """
+    from cinder_cli.executor import ExecutionLogger
+
+    config: Config = ctx.obj["config"]
+    logger = ExecutionLogger(config)
+    
+    execution = logger.get_execution(execution_id)
+    if not execution:
+        click.echo(f"Execution {execution_id} not found.", err=True)
+        return
+    
+    if format == "json":
+        import json
+        click.echo(json.dumps(execution, indent=2, ensure_ascii=False))
+    else:
+        click.echo(f"\nExecution ID: {execution['id']}")
+        click.echo(f"Timestamp: {execution['timestamp']}")
+        click.echo(f"Goal: {execution['goal']}")
+        click.echo(f"Status: {execution['status']}")
+        click.echo(f"\nCreated Files:")
+        for file_path in execution.get('created_files', []):
+            click.echo(f"  - {file_path}")
+
+
+@execution.command("rollback")
+@click.argument("execution_id", type=int)
+@click.pass_context
+def rollback_execution(ctx: click.Context, execution_id: int) -> None:
+    """
+    Rollback files created by an execution.
+    """
+    from cinder_cli.executor import ExecutionLogger, FileOperations
+
+    config: Config = ctx.obj["config"]
+    logger = ExecutionLogger(config)
+    
+    execution = logger.get_execution(execution_id)
+    if not execution:
+        click.echo(f"Execution {execution_id} not found.", err=True)
+        return
+    
+    created_files = execution.get('created_files', [])
+    if not created_files:
+        click.echo("No files to rollback.")
+        return
+    
+    click.echo(f"Will delete {len(created_files)} files:")
+    for file_path in created_files:
+        click.echo(f"  - {file_path}")
+    
+    if click.confirm("Proceed with rollback?"):
+        file_ops = FileOperations(config)
+        for file_path in created_files:
+            try:
+                file_ops.delete_file(file_path, backup=True)
+            except Exception as e:
+                click.echo(f"  Failed to delete {file_path}: {e}")
+        
+        click.echo("\n✓ Rollback complete")
+
+
+@execution.command()
+@click.pass_context
+def stats(ctx: click.Context) -> None:
+    """Show execution statistics and analysis."""
+    from rich.console import Console
+    from rich.table import Table
+    
+    config: Config = ctx.obj["config"]
+    logger = ExecutionLogger(config)
+    console = Console()
+    
+    executions = logger.list_executions(limit=100)
+    
+    if not executions:
+        console.print("[yellow]No executions found.[/yellow]")
+        return
+    
+    total = len(executions)
+    success_count = sum(1 for e in executions if e.get("status") == "success")
+    total_files = sum(len(e.get("created_files", [])) for e in executions)
+    
+    console.print("\n[bold cyan]执行统计[/bold cyan]\n")
+    
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("指标", style="cyan")
+    table.add_column("值", justify="right")
+    
+    table.add_row("总执行次数", str(total))
+    table.add_row("成功次数", str(success_count))
+    table.add_row("成功率", f"{success_count/total*100:.1f}%")
+    table.add_row("创建文件总数", str(total_files))
+    table.add_row("平均文件数/执行", f"{total_files/total:.1f}")
+    
+    console.print(table)
+    
+    patterns = logger.analyze_patterns()
+    if patterns.get("insights"):
+        console.print("\n[bold cyan]模式分析[/bold cyan]")
+        for insight in patterns["insights"]:
+            console.print(f"  • {insight}")
+
+
+@cli.command()
 @click.argument("key", required=False)
 @click.argument("value", required=False)
 @click.option("--list", "list_all", is_flag=True, help="List all configuration")

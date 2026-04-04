@@ -51,4 +51,4 @@ class TestConfig:
         """Test database path property."""
         db_path = config.database_path
         assert db_path.name == "decisions.db"
-        assert db_path.parent.name == ".cinder"
+        assert db_path.parent == config.config_dir

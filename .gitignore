@@ -60,6 +60,19 @@ soul.meta.yaml
 *.db-wal
 *.db-shm
 
+# Executor specific
+.cinder_backups/
+.cinder/cache/
+.cinder/executions.db
+.cinder/execution.log
+executions.db
+execution.log
+
+# Generated projects
+generated/
+output/
+projects/
+
 # OS
 .DS_Store
 Thumbs.db

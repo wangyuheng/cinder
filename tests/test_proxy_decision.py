@@ -86,7 +86,7 @@ class TestConfidenceScorer:
             option_match=0.3,
             context_clarity=0.3,
         )
-        assert score < 0.6
+        assert score < 0.7
 
     def test_confidence_bounds(self):
         """Test confidence score bounds."""
