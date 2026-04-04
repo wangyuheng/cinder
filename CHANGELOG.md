@@ -39,7 +39,7 @@
 - 前端：Next.js 14 + Tailwind CSS + React Query
 - 图标：Lucide Icons
 
-## [2.0.0] - 2025-01-04
+## [2.0.0] - 2026-04-04
 
 ### 新增
 - 使用 Click 框架完全重写 CLI
