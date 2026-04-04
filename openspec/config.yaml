@@ -1,0 +1,149 @@
+schema: spec-driven
+
+# =============================================================================
+# Project Context
+# =============================================================================
+# This context is shown to AI when creating artifacts.
+# It helps AI understand the project's tech stack, conventions, and domain.
+
+context: |
+  Tech Stack:
+    - Python 3.10+
+    - Click (CLI framework)
+    - Questionary (interactive prompts)
+    - Rich (terminal formatting)
+    - SQLite (decision logging)
+    - LangChain (AI integration)
+    - Ollama / Claude (backends)
+  
+  Project Type:
+    - Command-line interface tool
+    - AI-powered personal agent
+    - Decision support system
+  
+  Domain:
+    - Soul-based personality profiling
+    - Proxy decision-making
+    - Personal agent interactions
+  
+  Architecture:
+    - Modular CLI with Click groups
+    - Configuration management with YAML
+    - Database layer with SQLite
+    - Backend abstraction (Ollama/Claude)
+  
+  Code Style:
+    - Follow PEP 8 guidelines
+    - Use type hints for all functions
+    - Write docstrings for public APIs
+    - Line length: 100 characters
+    - Use Black for formatting
+    - Use Ruff for linting
+  
+  Naming Conventions:
+    - CLI commands: lowercase with hyphens (e.g., `cinder init`)
+    - Python modules: lowercase with underscores (e.g., `question_guide.py`)
+    - Classes: PascalCase (e.g., `SoulPresenter`)
+    - Functions/variables: snake_case (e.g., `calculate_score`)
+    - Constants: UPPER_SNAKE_CASE (e.g., `DEFAULT_CONFIG`)
+  
+  File Organization:
+    - cinder_cli/ - Main package
+    - tests/ - Test suite
+    - docs/ - Documentation
+    - examples/ - Example files
+    - openspec/ - OpenSpec changes
+  
+  Key Concepts:
+    - Soul Profile: User's personality and decision preferences
+    - Proxy Decision: Agent making decisions on behalf of user
+    - Trait Vector: 13 personality traits with scores
+    - Decision Logging: Recording all proxy decisions
+  
+  User Experience:
+    - Interactive prompts with questionary
+    - Rich terminal output with colors and tables
+    - Progress indicators for long operations
+    - Clear error messages and guidance
+
+# =============================================================================
+# Per-Artifact Rules
+# =============================================================================
+# Custom rules for specific artifacts.
+
+rules:
+  proposal:
+    - Keep proposals concise (under 800 words)
+    - Always include "Why" and "What Changes" sections
+    - List new and modified capabilities separately
+    - Consider impact on existing users
+    
+  design:
+    - Start with Context section explaining current state
+    - Include Goals and Non-Goals sections
+    - Document all major decisions with rationale
+    - Consider risks and trade-offs
+    - Include migration plan if breaking changes
+    
+  specs:
+    - Use Given-When-Then format for scenarios
+    - Group related requirements under features
+    - Include both happy path and error cases
+    - Specify user-facing behavior, not implementation
+    
+  tasks:
+    - Break tasks into small, actionable items
+    - Group tasks by feature or module
+    - Use clear, descriptive task names
+    - Estimate complexity (not time)
+    - Mark dependencies between tasks
+    
+  implementation:
+    - Follow existing code patterns
+    - Add tests for new functionality
+    - Update documentation as needed
+    - Maintain backward compatibility
+    - Use type hints and docstrings
+
+# =============================================================================
+# Artifact Templates (Optional)
+# =============================================================================
+# Custom templates for specific artifacts.
+
+templates:
+  proposal: |
+    ## Why
+    [Why is this change needed?]
+    
+    ## What Changes
+    [What will be changed?]
+    
+    ## Capabilities
+    
+    ### New Capabilities
+    - [New capability 1]
+    - [New capability 2]
+    
+    ### Modified Capabilities
+    - [Modified capability 1]
+    
+    ## Impact
+    [What is the impact on users and codebase?]
+    
+  design: |
+    ## Context
+    [Current state and background]
+    
+    ## Goals / Non-Goals
+    
+    **Goals:**
+    - [Goal 1]
+    
+    **Non-Goals:**
+    - [Non-goal 1]
+    
+    ## Decisions
+    [Major design decisions with rationale]
+    
+    ## Risks / Trade-offs
+    [Potential risks and trade-offs]

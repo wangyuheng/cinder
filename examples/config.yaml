@@ -1,0 +1,113 @@
+# Cinder Configuration Example
+# Copy this file to ~/.cinder/config.yaml and customize as needed
+# 
+# Usage:
+#   cp examples/config.yaml ~/.cinder/config.yaml
+#   vim ~/.cinder/config.yaml
+
+# =============================================================================
+# Backend Configuration
+# =============================================================================
+
+# AI backend to use: "ollama" or "claude"
+backend: ollama
+
+# =============================================================================
+# Model Settings
+# =============================================================================
+
+# Model name (for Ollama backend)
+model: qwen3.5:9b
+
+# Temperature for response generation (0.0 - 2.0)
+# Lower values = more focused and deterministic
+# Higher values = more creative and varied
+temperature: 0.2
+
+# =============================================================================
+# Claude-Specific Settings (only used when backend is "claude")
+# =============================================================================
+
+# Path to Claude CLI command
+claude_command: claude
+
+# Enable reflection loop for Claude
+# Allows Claude to reflect on and improve its responses
+reflection_loop: false
+
+# Maximum iterations for reflection loop
+max_iterations: 3
+
+# Sleep seconds between iterations
+sleep_seconds: 1.0
+
+# =============================================================================
+# Soul Profile Settings
+# =============================================================================
+
+# Path to soul.md file (can be absolute or relative)
+soul_path: soul.md
+
+# Path to soul.meta.yaml file (optional, defaults to soul_path with .meta.yaml extension)
+meta_path: ""
+
+# =============================================================================
+# Proxy Decision Settings
+# =============================================================================
+
+# Enable proxy decision mode
+# When enabled, agent can make decisions on your behalf based on soul rules
+proxy_mode: false
+
+# Enable decision logging
+# All proxy decisions will be logged to SQLite database
+decision_logging: true
+
+# =============================================================================
+# Logging Settings
+# =============================================================================
+
+# Number of days to retain decision logs
+# Logs older than this will be auto-archived
+log_retention_days: 90
+
+# =============================================================================
+# Security Settings
+# =============================================================================
+
+# Enable database encryption
+# When enabled, decision database will be encrypted
+encryption: false
+
+# =============================================================================
+# Advanced Settings
+# =============================================================================
+
+# Maximum tokens for response (not implemented yet)
+# max_tokens: 2000
+
+# Custom system prompt prefix (not implemented yet)
+# system_prompt_prefix: ""
+
+# =============================================================================
+# Example Configurations
+# =============================================================================
+
+# For conservative users (low risk tolerance):
+#   proxy_mode: false
+#   decision_logging: true
+#   temperature: 0.1
+
+# For experimental users (high risk tolerance):
+#   proxy_mode: true
+#   decision_logging: true
+#   temperature: 0.5
+
+# For privacy-focused users:
+#   decision_logging: false
+#   encryption: true
+
+# For Claude users:
+#   backend: claude
+#   reflection_loop: true
+#   max_iterations: 3

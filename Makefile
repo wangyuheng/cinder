@@ -1,0 +1,34 @@
+# Makefile for Cinder project
+
+.PHONY: help install test lint format clean
+
+help:
+	@echo "Available commands:"
+	@echo "  make install    - Install dependencies"
+	@echo "  make test       - Run tests"
+	@echo "  make lint       - Run linting"
+	@echo "  make format     - Format code"
+	@echo "  make clean      - Clean build artifacts"
+
+install:
+	pip install -e ".[dev]"
+
+test:
+	pytest
+
+lint:
+	ruff check cinder_cli tests
+
+format:
+	black cinder_cli tests
+	ruff check --fix cinder_cli tests
+
+clean:
+	rm -rf build/
+	rm -rf dist/
+	rm -rf *.egg-info
+	rm -rf .pytest_cache
+	rm -rf .coverage
+	rm -rf htmlcov/
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
