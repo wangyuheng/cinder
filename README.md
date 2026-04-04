@@ -128,17 +128,17 @@ cinder execution rollback 1
 ### 7. Web 管理界面
 
 ```bash
-# 启动 Web Dashboard
+# 一键启动（推荐）
+./scripts/start-web.sh
+
+# 或使用 CLI 命令
 cinder server
 
-# 指定端口
-cinder server --port 9000
+# 自定义端口
+./scripts/start-web.sh --backend-port 9000 --frontend-port 3001
 
 # 自动打开浏览器
-cinder server --open
-
-# 查看帮助
-cinder server --help
+./scripts/start-web.sh --open
 ```
 
 Web 界面功能：
@@ -147,6 +147,8 @@ Web 界面功能：
 - ⚙️ **Soul 配置** - 可视化编辑 Soul 设置
 - 📋 **决策记录** - 查看决策历史和统计
 - 🎯 **任务触发** - 手动触发新执行
+- 🎨 **主题切换** - 浅色/深色主题（默认浅色）
+- 📝 **实时日志** - 彩色日志追踪（青色后端 + 绿色前端）
 
 详见 [Web 界面使用指南](docs/WEB_GUIDE.md)。
 

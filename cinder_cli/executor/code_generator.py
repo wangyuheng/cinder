@@ -106,6 +106,255 @@ class CodeGenerator:
                 print(f"\n[DEBUG] Error: {e}\n")
             return error_msg
 
+    def generate_with_iterations(
+        self,
+        description: str,
+        language: str = "python",
+        constraints: dict[str, Any] | None = None,
+        max_iterations: int = 3,
+        quality_threshold: float = 0.8,
+    ) -> dict[str, Any]:
+        """
+        Generate code iteratively with self-evaluation and improvement.
+
+        Args:
+            description: Task description
+            language: Programming language
+            constraints: Optional constraints
+            max_iterations: Maximum number of iterations
+            quality_threshold: Minimum quality score required
+
+        Returns:
+            Generation result with code and metadata
+        """
+        best_code = None
+        best_score = 0.0
+        iteration_history = []
+
+        for iteration in range(max_iterations):
+            if iteration == 0:
+                code = self.generate_code(description, language, constraints)
+            else:
+                code = self._regenerate_with_feedback(
+                    description,
+                    language,
+                    constraints,
+                    previous_code,
+                    evaluation
+                )
+
+            evaluation = self._self_evaluate(code, description, language)
+
+            iteration_history.append({
+                "iteration": iteration + 1,
+                "quality_score": evaluation.get("quality_score", 0),
+                "issues": evaluation.get("issues", []),
+            })
+
+            if evaluation.get("quality_score", 0) > best_score:
+                best_score = evaluation.get("quality_score", 0)
+                best_code = code
+
+            if evaluation.get("quality_score", 0) >= quality_threshold:
+                return {
+                    "code": code,
+                    "iterations": iteration + 1,
+                    "final_score": evaluation.get("quality_score", 0),
+                    "quality_threshold_met": True,
+                    "iteration_history": iteration_history,
+                }
+
+            previous_code = code
+
+        return {
+            "code": best_code,
+            "iterations": max_iterations,
+            "final_score": best_score,
+            "quality_threshold_met": best_score >= quality_threshold,
+            "iteration_history": iteration_history,
+        }
+
+    def _self_evaluate(
+        self,
+        code: str,
+        description: str,
+        language: str,
+    ) -> dict[str, Any]:
+        """
+        Self-evaluate generated code.
+
+        Args:
+            code: Generated code
+            description: Task description
+            language: Programming language
+
+        Returns:
+            Evaluation result with quality score
+        """
+        scores = {}
+        issues = []
+
+        syntax_result = self.validate_syntax(code, language)
+        scores["syntax"] = 1.0 if syntax_result.get("valid", False) else 0.0
+        if not syntax_result.get("valid", False):
+            issues.append(f"Syntax error: {syntax_result.get('message', 'Unknown')}")
+
+        logic_score = self._evaluate_logic(code, description, language)
+        scores["logic"] = logic_score
+        if logic_score < 0.7:
+            issues.append("Logic may not fully address the task")
+
+        style_score = self._evaluate_style(code, language)
+        scores["style"] = style_score
+        if style_score < 0.7:
+            issues.append("Code style could be improved")
+
+        doc_score = self._evaluate_documentation(code, language)
+        scores["documentation"] = doc_score
+        if doc_score < 0.5:
+            issues.append("Insufficient documentation")
+
+        weights = {
+            "syntax": 0.3,
+            "logic": 0.4,
+            "style": 0.15,
+            "documentation": 0.15,
+        }
+
+        quality_score = sum(
+            scores[key] * weights[key] for key in scores
+        )
+
+        return {
+            "quality_score": round(quality_score, 2),
+            "scores": scores,
+            "issues": issues,
+        }
+
+    def _evaluate_logic(
+        self,
+        code: str,
+        description: str,
+        language: str,
+    ) -> float:
+        """Evaluate if code logic addresses the task."""
+        score = 0.5
+
+        description_lower = description.lower()
+        code_lower = code.lower()
+
+        keywords = {
+            "web": ["app", "route", "get", "post", "fastapi", "flask"],
+            "api": ["api", "endpoint", "request", "response"],
+            "database": ["database", "db", "query", "model"],
+            "auth": ["auth", "login", "password", "token"],
+            "test": ["test", "assert", "unittest"],
+        }
+
+        for category, kws in keywords.items():
+            if category in description_lower:
+                if any(kw in code_lower for kw in kws):
+                    score += 0.1
+
+        if "def " in code or "function " in code:
+            score += 0.1
+        if "class " in code:
+            score += 0.1
+
+        return min(score, 1.0)
+
+    def _evaluate_style(self, code: str, language: str) -> float:
+        """Evaluate code style."""
+        score = 0.5
+
+        lines = code.split("\n")
+        if not lines:
+            return 0.0
+
+        avg_line_length = sum(len(line) for line in lines) / len(lines)
+        if avg_line_length < 100:
+            score += 0.2
+
+        if "    " in code or "\t" in code:
+            score += 0.1
+
+        if any(line.strip().startswith("#") or '"""' in line or "'''" in line for line in lines):
+            score += 0.1
+
+        if language == "python":
+            try:
+                import ast
+                ast.parse(code)
+                score += 0.1
+            except:
+                pass
+
+        return min(score, 1.0)
+
+    def _evaluate_documentation(self, code: str, language: str) -> float:
+        """Evaluate code documentation."""
+        score = 0.0
+
+        if '"""' in code or "'''" in code:
+            score += 0.4
+        if "#" in code:
+            score += 0.2
+
+        if language == "python":
+            import ast
+            try:
+                tree = ast.parse(code)
+                for node in ast.walk(tree):
+                    if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.AsyncFunctionDef)):
+                        if ast.get_docstring(node):
+                            score += 0.1
+            except:
+                pass
+
+        return min(score, 1.0)
+
+    def _regenerate_with_feedback(
+        self,
+        description: str,
+        language: str,
+        constraints: dict[str, Any] | None,
+        previous_code: str,
+        evaluation: dict[str, Any],
+    ) -> str:
+        """
+        Regenerate code with feedback from evaluation.
+
+        Args:
+            description: Task description
+            language: Programming language
+            constraints: Optional constraints
+            previous_code: Previously generated code
+            evaluation: Evaluation result
+
+        Returns:
+            Improved code
+        """
+        issues = evaluation.get("issues", [])
+        scores = evaluation.get("scores", {})
+
+        feedback_parts = []
+        if scores.get("syntax", 1.0) < 1.0:
+            feedback_parts.append("Fix syntax errors")
+        if scores.get("logic", 0) < 0.7:
+            feedback_parts.append("Improve logic to better address the task")
+        if scores.get("style", 0) < 0.7:
+            feedback_parts.append("Improve code style and formatting")
+        if scores.get("documentation", 0) < 0.5:
+            feedback_parts.append("Add more documentation and comments")
+
+        feedback = "Previous issues: " + ", ".join(feedback_parts) if feedback_parts else ""
+
+        enhanced_constraints = constraints or {}
+        enhanced_constraints["feedback"] = feedback
+        enhanced_constraints["previous_code"] = previous_code
+
+        return self.generate_code(description, language, enhanced_constraints)
+
     def _build_system_prompt(
         self,
         language: str,
