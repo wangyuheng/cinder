@@ -1,152 +1,152 @@
 schema: spec-driven
 
 # =============================================================================
-# Project Context
+# 项目上下文
 # =============================================================================
-# This context is shown to AI when creating artifacts.
-# It helps AI understand the project's tech stack, conventions, and domain.
+# 此上下文在创建 artifacts 时展示给 AI。
+# 帮助 AI 理解项目的技术栈、约定和领域。
 
 context: |
-  Tech Stack:
+  技术栈:
     - Python 3.10+
-    - Click (CLI framework)
-    - Questionary (interactive prompts)
-    - Rich (terminal formatting)
-    - SQLite (decision logging)
-    - LangChain (AI integration)
-    - Ollama / Claude (backends)
+    - Click (CLI 框架)
+    - Questionary (交互式提示)
+    - Rich (终端格式化)
+    - SQLite (决策日志)
+    - LangChain (AI 集成)
+    - Ollama / Claude (后端)
   
-  Project Type:
-    - Command-line interface tool
-    - AI-powered personal agent
-    - Decision support system
+  项目类型:
+    - 命令行界面工具
+    - AI 驱动的个人代理
+    - 决策支持系统
   
-  Domain:
-    - Soul-based personality profiling
-    - Proxy decision-making
-    - Personal agent interactions
+  领域:
+    - 基于 Soul 的人格画像
+    - 代理决策
+    - 个人代理交互
   
-  Architecture:
-    - Modular CLI with Click groups
-    - Configuration management with YAML
-    - Database layer with SQLite
-    - Backend abstraction (Ollama/Claude)
+  架构:
+    - 使用 Click groups 的模块化 CLI
+    - 使用 YAML 的配置管理
+    - 使用 SQLite 的数据库层
+    - 后端抽象 (Ollama/Claude)
   
-  Code Style:
-    - Follow PEP 8 guidelines
-    - Use type hints for all functions
-    - Write docstrings for public APIs
-    - Line length: 100 characters
-    - Use Black for formatting
-    - Use Ruff for linting
+  代码风格:
+    - 遵循 PEP 8 指南
+    - 为所有函数使用类型提示
+    - 为公共 API 编写文档字符串
+    - 行长度：100 字符
+    - 使用 Black 进行格式化
+    - 使用 Ruff 进行代码检查
   
-  Naming Conventions:
-    - CLI commands: lowercase with hyphens (e.g., `cinder init`)
-    - Python modules: lowercase with underscores (e.g., `question_guide.py`)
-    - Classes: PascalCase (e.g., `SoulPresenter`)
-    - Functions/variables: snake_case (e.g., `calculate_score`)
-    - Constants: UPPER_SNAKE_CASE (e.g., `DEFAULT_CONFIG`)
+  命名约定:
+    - CLI 命令: 小写加连字符 (如 `cinder init`)
+    - Python 模块: 小写加下划线 (如 `question_guide.py`)
+    - 类: 帕斯卡命名法 (如 `SoulPresenter`)
+    - 函数/变量: 蛇形命名法 (如 `calculate_score`)
+    - 常量: 大写蛇形命名法 (如 `DEFAULT_CONFIG`)
   
-  File Organization:
-    - cinder_cli/ - Main package
-    - tests/ - Test suite
-    - docs/ - Documentation
-    - examples/ - Example files
-    - openspec/ - OpenSpec changes
+  文件组织:
+    - cinder_cli/ - 主包
+    - tests/ - 测试套件
+    - docs/ - 文档
+    - examples/ - 示例文件
+    - openspec/ - OpenSpec 变更
   
-  Key Concepts:
-    - Soul Profile: User's personality and decision preferences
-    - Proxy Decision: Agent making decisions on behalf of user
-    - Trait Vector: 13 personality traits with scores
-    - Decision Logging: Recording all proxy decisions
+  核心概念:
+    - Soul Profile: 用户的人格和决策偏好
+    - Proxy Decision: 代理代表用户做出的决策
+    - Trait Vector: 13 个人格特质及其分数
+    - Decision Logging: 记录所有代理决策
   
-  User Experience:
-    - Interactive prompts with questionary
-    - Rich terminal output with colors and tables
-    - Progress indicators for long operations
-    - Clear error messages and guidance
+  用户体验:
+    - 使用 questionary 的交互式提示
+    - 带颜色和表格的 Rich 终端输出
+    - 长操作的进度指示器
+    - 清晰的错误消息和指导
 
 # =============================================================================
-# Per-Artifact Rules
+# 每个 Artifact 的规则
 # =============================================================================
-# Custom rules for specific artifacts.
+# 针对特定 artifacts 的自定义规则。
 
 rules:
   proposal:
-    - Keep proposals concise (under 800 words)
-    - Always include "Why" and "What Changes" sections
-    - List new and modified capabilities separately
-    - Consider impact on existing users
+    - 保持提案简洁（800 字以内）
+    - 必须包含"为什么"和"变更内容"部分
+    - 分别列出新增和修改的能力
+    - 考虑对现有用户的影响
     
   design:
-    - Start with Context section explaining current state
-    - Include Goals and Non-Goals sections
-    - Document all major decisions with rationale
-    - Consider risks and trade-offs
-    - Include migration plan if breaking changes
+    - 从解释当前状态的上下文部分开始
+    - 包含目标和非目标部分
+    - 记录所有主要决策及其理由
+    - 考虑风险和权衡
+    - 如有破坏性变更，包含迁移计划
     
   specs:
-    - Use Given-When-Then format for scenarios
-    - Group related requirements under features
-    - Include both happy path and error cases
-    - Specify user-facing behavior, not implementation
+    - 使用 Given-When-Then 格式编写场景
+    - 将相关需求分组到功能下
+    - 包含正常路径和错误情况
+    - 指定面向用户的行为，而非实现细节
     
   tasks:
-    - Break tasks into small, actionable items
-    - Group tasks by feature or module
-    - Use clear, descriptive task names
-    - Estimate complexity (not time)
-    - Mark dependencies between tasks
+    - 将任务分解为小的、可执行的项目
+    - 按功能或模块对任务分组
+    - 使用清晰、描述性的任务名称
+    - 估算复杂度（而非时间）
+    - 标记任务之间的依赖关系
     
   implementation:
-    - Follow existing code patterns
-    - Add tests for new functionality
-    - Update documentation as needed (CHANGELOG.md, README.md, guides)
-    - Maintain backward compatibility
-    - Use type hints and docstrings
-    - Follow Keep a Changelog format for CHANGELOG.md
-    - Include usage examples in documentation
-    - Add cross-references between related documents
+    - 遵循现有代码模式
+    - 为新功能添加测试
+    - 根据需要更新文档 (CHANGELOG.md, README.md, 指南)
+    - 保持向后兼容性
+    - 使用类型提示和文档字符串
+    - CHANGELOG.md 遵循 Keep a Changelog 格式
+    - 在文档中包含使用示例
+    - 在相关文档之间添加交叉引用
 
 # =============================================================================
-# Artifact Templates (Optional)
+# Artifact 模板（可选）
 # =============================================================================
-# Custom templates for specific artifacts.
+# 特定 artifacts 的自定义模板。
 
 templates:
   proposal: |
-    ## Why
-    [Why is this change needed?]
+    ## 为什么
+    [为什么需要这个变更？]
     
-    ## What Changes
-    [What will be changed?]
+    ## 变更内容
+    [将要变更什么？]
     
-    ## Capabilities
+    ## 能力
     
-    ### New Capabilities
-    - [New capability 1]
-    - [New capability 2]
+    ### 新增能力
+    - [新能力 1]
+    - [新能力 2]
     
-    ### Modified Capabilities
-    - [Modified capability 1]
+    ### 修改能力
+    - [修改的能力 1]
     
-    ## Impact
-    [What is the impact on users and codebase?]
+    ## 影响
+    [对用户和代码库有什么影响？]
     
   design: |
-    ## Context
-    [Current state and background]
+    ## 上下文
+    [当前状态和背景]
     
-    ## Goals / Non-Goals
+    ## 目标 / 非目标
     
-    **Goals:**
-    - [Goal 1]
+    **目标:**
+    - [目标 1]
     
-    **Non-Goals:**
-    - [Non-goal 1]
+    **非目标:**
+    - [非目标 1]
     
-    ## Decisions
-    [Major design decisions with rationale]
+    ## 决策
+    [主要设计决策及其理由]
     
-    ## Risks / Trade-offs
-    [Potential risks and trade-offs]
+    ## 风险 / 权衡
+    [潜在风险和权衡]
