@@ -104,6 +104,16 @@ rules:
     - Update documentation as needed
     - Maintain backward compatibility
     - Use type hints and docstrings
+    
+  documentation:
+    - Update CHANGELOG.md for all notable changes
+    - Follow Keep a Changelog format
+    - Update README.md for user-facing features
+    - Update relevant guide documents (WEB_GUIDE.md, DEPLOYMENT.md, etc.)
+    - Include code examples and usage scenarios
+    - Keep documentation concise and clear
+    - Use consistent formatting and structure
+    - Add cross-references between related documents
 
 # =============================================================================
 # Artifact Templates (Optional)
@@ -147,3 +157,37 @@ templates:
     
     ## Risks / Trade-offs
     [Potential risks and trade-offs]
+    
+  changelog: |
+    ## [X.Y.Z] - YYYY-MM-DD
+    
+    ### Added
+    - [New feature 1]
+    - [New feature 2]
+    
+    ### Changed
+    - [Change 1]
+    - [Change 2]
+    
+    ### Fixed
+    - [Bug fix 1]
+    
+    ### Removed
+    - [Removed feature 1]
+    
+  readme_feature: |
+    ### X. Feature Name
+    
+    ```bash
+    # Basic usage
+    command --option
+    
+    # Advanced usage
+    command --option1 --option2
+    ```
+    
+    Feature highlights:
+    - 🎯 **Feature 1** - Description
+    - 📝 **Feature 2** - Description
+    
+    See [Feature Guide](docs/FEATURE_GUIDE.md).
