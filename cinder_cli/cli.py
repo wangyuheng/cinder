@@ -605,6 +605,45 @@ def config_cmd(
 cli.add_command(config_cmd, name="config")
 
 
+@cli.command()
+@click.option("--host", default="localhost", help="Host to bind server")
+@click.option("--port", default=8000, help="Port for API server")
+@click.option("--frontend-port", default=3000, help="Port for frontend")
+@click.option("--no-frontend", is_flag=True, help="Don't start frontend")
+@click.option("--open", "open_browser", is_flag=True, help="Open browser automatically")
+@click.pass_context
+def server(
+    ctx: click.Context,
+    host: str,
+    port: int,
+    frontend_port: int,
+    no_frontend: bool,
+    open_browser: bool,
+) -> None:
+    """Start the web dashboard server."""
+    import uvicorn
+    import webbrowser
+    import threading
+    import time
+
+    config: Config = ctx.obj["config"]
+
+    click.echo(f"\n🚀 Starting Cinder Dashboard...")
+    click.echo(f"   API Server: http://{host}:{port}")
+    if not no_frontend:
+        click.echo(f"   Frontend: http://{host}:{frontend_port}")
+
+    if open_browser:
+        url = f"http://{host}:{frontend_port}" if not no_frontend else f"http://{host}:{port}/docs"
+        threading.Timer(1.0, lambda: webbrowser.open(url)).start()
+
+    from cinder_cli.web.server import create_app
+
+    app = create_app(config)
+
+    uvicorn.run(app, host=host, port=port, log_level="info")
+
+
 def main() -> None:
     """Main entry point."""
     cli()

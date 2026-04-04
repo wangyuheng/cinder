@@ -17,7 +17,7 @@ backend: ollama
 # =============================================================================
 
 # Model name (for Ollama backend)
-model: qwen3.5:9b
+model: qwen3.5:0.8b
 
 # Temperature for response generation (0.0 - 2.0)
 # Lower values = more focused and deterministic
@@ -50,6 +50,15 @@ soul_path: soul.md
 
 # Path to soul.meta.yaml file (optional, defaults to soul_path with .meta.yaml extension)
 meta_path: ""
+
+# =============================================================================
+# Workspace Settings
+# =============================================================================
+
+# Workspace directory for generated artifacts
+# Default: current directory (where you run cinder command)
+# Leave empty to use current directory, or set to custom path
+workspace_dir: ""
 
 # =============================================================================
 # Proxy Decision Settings

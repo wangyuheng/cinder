@@ -35,7 +35,14 @@ class FileOperations:
 
     def __init__(self, config: Config, working_dir: Path | None = None):
         self.config = config
-        self.working_dir = working_dir or Path.cwd()
+        if working_dir:
+            self.working_dir = working_dir
+        else:
+            workspace = config.get("workspace_dir", "")
+            if workspace:
+                self.working_dir = Path(workspace)
+            else:
+                self.working_dir = Path.cwd()
         self.backup_dir = self.working_dir / ".cinder_backups"
         self.backup_dir.mkdir(exist_ok=True)
 

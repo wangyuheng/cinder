@@ -125,6 +125,31 @@ cinder execution show 1
 cinder execution rollback 1
 ```
 
+### 7. Web 管理界面
+
+```bash
+# 启动 Web Dashboard
+cinder server
+
+# 指定端口
+cinder server --port 9000
+
+# 自动打开浏览器
+cinder server --open
+
+# 查看帮助
+cinder server --help
+```
+
+Web 界面功能：
+- 📊 **仪表盘** - 执行统计和最近活动
+- 📜 **执行历史** - 查看和管理执行记录
+- ⚙️ **Soul 配置** - 可视化编辑 Soul 设置
+- 📋 **决策记录** - 查看决策历史和统计
+- 🎯 **任务触发** - 手动触发新执行
+
+详见 [Web 界面使用指南](docs/WEB_GUIDE.md)。
+
 ## 命令参考
 
 ### `cinder init`

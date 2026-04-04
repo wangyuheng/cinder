@@ -24,8 +24,10 @@ auto_test: false
 # Security Settings
 # =============================================================================
 
-# Working directory restriction (relative to project root or absolute path)
-working_directory: "."
+# Working directory for generated artifacts
+# Default: current directory (where you run cinder command)
+# Leave empty to use current directory, or set to custom path
+workspace_dir: ""
 
 # Allowed file extensions
 allowed_extensions:
@@ -58,7 +60,7 @@ max_file_size: 1048576  # 1 MB
 # =============================================================================
 
 # Ollama configuration
-ollama_base_url: "http://192.168.18.123:11434"
+ollama_base_url: "http://localhost:11434"
 model: "qwen3.5:0.8b"
 ollama_keep_alive: "10m"
 

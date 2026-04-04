@@ -16,7 +16,7 @@ class Config:
 
     DEFAULT_CONFIG = {
         "backend": "ollama",
-        "model": "qwen3.5:9b",
+        "model": "qwen3.5:0.8b",
         "claude_command": "claude",
         "soul_path": "soul.md",
         "meta_path": "",
@@ -28,6 +28,7 @@ class Config:
         "decision_logging": True,
         "log_retention_days": 90,
         "encryption": False,
+        "workspace_dir": "",
     }
 
     def __init__(self, config_dir: Path | None = None):

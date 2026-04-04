@@ -73,6 +73,18 @@ generated/
 output/
 projects/
 
+# Web frontend
+cinder_cli/web/frontend/node_modules/
+cinder_cli/web/frontend/.next/
+cinder_cli/web/frontend/out/
+cinder_cli/web/frontend/.pnp
+cinder_cli/web/frontend/.pnp.js
+cinder_cli/web/frontend/.yarn/
+
+# Logs
+logs/
+*.log
+
 # OS
 .DS_Store
 Thumbs.db

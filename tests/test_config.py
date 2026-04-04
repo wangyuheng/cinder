@@ -22,7 +22,7 @@ class TestConfig:
     def test_default_config(self, config):
         """Test default configuration values."""
         assert config.get("backend") == "ollama"
-        assert config.get("model") == "qwen3.5:9b"
+        assert config.get("model") == "qwen3.5:0.8b"
         assert config.get("temperature") == 0.2
 
     def test_set_and_get(self, config):

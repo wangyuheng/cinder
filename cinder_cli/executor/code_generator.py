@@ -17,7 +17,7 @@ class CodeGenerator:
         self.config = config
         self.model_name = config.get("model", "qwen3.5:0.8b")
         self.temperature = config.get("temperature", 0.2)
-        self.base_url = config.get("ollama_base_url", "http://192.168.18.123:11434")
+        self.base_url = config.get("ollama_base_url", "http://localhost:11434")
         self.keep_alive = config.get("ollama_keep_alive", "10m")
         self.client = ollama.Client(host=self.base_url)
 
