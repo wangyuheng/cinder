@@ -5,6 +5,40 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.1.0] - 2026-04-04
+
+### 新增
+- Web Dashboard 管理界面
+  - 仪表盘首页显示执行统计和最近活动
+  - 执行历史页面支持查看、筛选和详情展示
+  - Soul 配置页面支持可视化编辑
+  - 决策记录页面展示决策历史和统计
+  - 任务触发页面支持手动触发新执行
+  - 主题切换功能（默认浅色主题）
+- FastAPI 后端 REST API
+  - 执行历史 API 端点
+  - Soul 配置 API 端点
+  - 决策记录 API 端点
+  - 任务触发 API 端点
+- 一键启动脚本 `scripts/start-web.sh`
+  - 自动启动前后端服务
+  - 实时彩色日志追踪（青色后端 + 绿色前端）
+  - 支持自定义端口配置
+  - 优雅停止服务
+- Web 相关文档
+  - Web 界面使用指南
+  - 部署指南更新
+
+### 变更
+- 默认主题从深色改为浅色
+- 优化启动脚本的日志输出颜色（适合白色背景）
+- 更新 README 和相关文档
+
+### 技术栈
+- 后端：FastAPI + Uvicorn
+- 前端：Next.js 14 + Tailwind CSS + React Query
+- 图标：Lucide Icons
+
 ## [2.0.0] - 2025-01-04
 
 ### 新增
