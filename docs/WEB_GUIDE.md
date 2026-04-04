@@ -4,7 +4,44 @@ Cinder Web Dashboard 是一个现代化的 Web 管理界面，用于可视化管
 
 ## 快速开始
 
-### 启动服务
+### 一键启动（推荐）
+
+使用启动脚本自动启动前后端服务：
+
+```bash
+# 基本启动
+./scripts/start-web.sh
+
+# 自定义端口
+./scripts/start-web.sh --backend-port 9000 --frontend-port 3001
+
+# 自动打开浏览器
+./scripts/start-web.sh --open
+
+# 查看帮助
+./scripts/start-web.sh --help
+```
+
+启动后会自动：
+- ✅ 启动后端 API 服务（默认端口 8000）
+- ✅ 启动前端开发服务器（默认端口 3000）
+- ✅ 实时追踪日志（彩色输出）
+- ✅ 通过颜色和前缀区分前后端日志
+
+**日志输出示例：**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                           实时日志
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[BACKEND]  INFO:     Started server process [12345]      (明亮青色)
+[FRONTEND] ready - started server on 0.0.0.0:3000       (明亮绿色)
+```
+
+按 `Ctrl+C` 可优雅停止所有服务。
+
+### 单独启动服务
+
+#### 启动后端 API
 
 ```bash
 # 启动 API 服务 (默认端口 8000)
@@ -15,12 +52,9 @@ cinder server --port 9000
 
 # 自动打开浏览器
 cinder server --open
-
-# 查看帮助
-cinder server --help
 ```
 
-### 启动前端
+#### 启动前端
 
 ```bash
 # 进入前端目录

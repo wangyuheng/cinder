@@ -2,7 +2,30 @@
 
 ## 本地开发
 
-### 后端服务
+### 一键启动（推荐）
+
+使用启动脚本自动启动前后端服务：
+
+```bash
+# 基本启动
+./scripts/start-web.sh
+
+# 自定义端口
+./scripts/start-web.sh --backend-port 9000 --frontend-port 3001
+
+# 自动打开浏览器
+./scripts/start-web.sh --open
+```
+
+启动特性：
+- ✅ 自动启动前后端服务
+- ✅ 实时彩色日志追踪
+- ✅ 优雅停止（Ctrl+C）
+- ✅ 日志文件保存到 `logs/` 目录
+
+### 单独启动服务
+
+#### 后端服务
 
 ```bash
 # 安装依赖
@@ -15,7 +38,7 @@ cinder server
 cinder server --port 9000
 ```
 
-### 前端开发
+#### 前端开发
 
 ```bash
 # 进入前端目录
