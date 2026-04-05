@@ -9,12 +9,13 @@ import json
 import ollama
 
 from cinder_cli.config import Config
+from cinder_cli.executor.token_tracker import TokenTracker
 
 
 class TaskPlanner:
     """Decomposes complex goals into executable subtasks."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, token_tracker: TokenTracker | None = None):
         self.config = config
         self.model_name = config.get("model", "qwen3.5:0.8b")
         self.temperature = config.get("temperature", 0.2)
@@ -22,6 +23,7 @@ class TaskPlanner:
         self.keep_alive = config.get("ollama_keep_alive", "10m")
         self.debug = config.get("ollama_debug", False)
         self.client = ollama.Client(host=self.base_url)
+        self.token_tracker = token_tracker
 
     def understand_goal_with_llm(
         self,
@@ -84,11 +86,42 @@ class TaskPlanner:
                 keep_alive=self.keep_alive,
             )
 
-            content = response.get("message", {}).get("content", "")
+            if self.debug:
+                print(f"\n[DEBUG] TaskPlanner LLM Response Type:")
+                print(f"  {type(response)}")
+                print(f"\n[DEBUG] Response Attributes (all):")
+                attrs = [a for a in dir(response) if not a.startswith('_')]
+                for attr in attrs:
+                    try:
+                        value = getattr(response, attr)
+                        if not callable(value):
+                            print(f"  {attr}: {value}")
+                    except:
+                        pass
+
+            content = response.message.content if hasattr(response, 'message') else response.get("message", {}).get("content", "")
+            
+            input_tokens = getattr(response, 'prompt_eval_count', 0) or response.get("prompt_eval_count", 0)
+            output_tokens = getattr(response, 'eval_count', 0) or response.get("eval_count", 0)
+            
+            if self.debug:
+                print(f"\n[DEBUG] Token Extraction:")
+                print(f"  Has prompt_eval_count attr: {hasattr(response, 'prompt_eval_count')}")
+                print(f"  Has eval_count attr: {hasattr(response, 'eval_count')}")
+                print(f"  input_tokens: {input_tokens}")
+                print(f"  output_tokens: {output_tokens}")
+            
+            if self.token_tracker:
+                self.token_tracker.record_call(
+                    phase="plan",
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    model=self.model_name,
+                )
 
             if self.debug:
-                print(f"\n[DEBUG] TaskPlanner LLM Response:")
-                print(f"  Content: {content[:200]}...")
+                print(f"\n[DEBUG] Content Preview:")
+                print(f"  {content[:200]}...")
 
             json_match = content
             if "```json" in content:
@@ -281,10 +314,6 @@ class TaskPlanner:
             file_path = task.get("file_path", "")
             if file_path and ".." in file_path:
                 issues.append(f"Invalid file path: {file_path}")
-
-            language = task.get("language", "python")
-            if language not in ["python", "javascript", "typescript", "html", "css", "yaml", "markdown"]:
-                issues.append(f"Unsupported language: {language}")
 
         complexity = self.estimate_complexity(subtasks)
         avg_complexity = complexity.get("average", 0)
