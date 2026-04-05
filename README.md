@@ -4,12 +4,46 @@
 
 ## 功能特性
 
+### 🤖 双层 Agent 架构（v3.0.0 新增）
+
+Cinder 采用创新的**双层 Agent 架构**，实现智能决策与高效执行的完美分离：
+
+- **Decision Agent（决策代理）**：系统的大脑
+  - 理解用户意图和上下文
+  - 基于 Soul profile 做出智能决策
+  - 调度 Worker Agent 执行任务
+  - 评估执行结果并迭代优化
+  - 与用户主动交互获取反馈
+
+- **Worker Agent（工作代理）**：系统的执行者
+  - 专注执行 Plan → Generate → Evaluation 流程
+  - 返回客观数据，不做主观决策
+  - 支持输出选项供 Decision Agent 选择
+  - 实时报告执行状态和进度
+
+- **Agent Orchestrator（代理编排器）**：通信枢纽
+  - 管理 Agent 间的消息传递
+  - 控制生命周期和并发执行
+  - 记录和追踪所有通信
+
+- **Context Manager（上下文管理器）**：状态管理
+  - 短期上下文（内存）快速访问
+  - 长期上下文（SQLite）持久化存储
+  - 自动同步和上下文隔离
+
+### 🎯 核心功能
+
 - **交互式 Soul 画像生成**：通过 6 个核心问题引导用户生成个性化 soul 画像
 - **Soul 确认工作流**：查看、理解和调整你的 soul 画像
-- **代理决策**：基于你的 soul 偏好，agent 可代为决策
+- **智能代理决策**：基于你的 soul 偏好，agent 可代为决策
+  - 代码接受决策：基于质量自动判断
+  - 技术选型决策：基于风险容忍度选择技术
+  - 架构决策：基于结构偏好选择架构模式
+  - 实现决策：基于细节导向选择实现方式
 - **决策日志**：追踪和分析所有代理决策
 - **多后端支持**：支持 Ollama 和 Claude
 - **自主任务执行**：从自然语言目标到实际代码文件的端到端自动化
+- **Web 管理界面**：可视化监控和管理执行过程
 
 ## 安装
 
@@ -241,7 +275,20 @@ cinder execute "创建API" --framework fastapi --language python
 
 ## 配置
 
-配置存储在 `~/.cinder/config.yaml`。
+Cinder 支持多级配置文件，按以下优先级加载：
+
+1. **项目目录配置**（推荐）：`.cinder/config.yaml` 或 `cinder.yaml`
+2. **用户目录配置**：`~/.cinder/config.yaml`
+3. **默认配置**
+
+**推荐方式**：在项目根目录创建 `cinder.yaml` 文件，方便版本控制和团队协作。
+
+```bash
+# 在项目根目录创建配置文件
+cp examples/config.yaml cinder.yaml
+# 或
+mkdir -p .cinder && cp examples/config.yaml .cinder/config.yaml
+```
 
 **默认配置：**
 ```yaml

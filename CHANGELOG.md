@@ -1,151 +1,151 @@
-# Changelog
+# 变更日志
 
-All notable changes to this project will be documented in this file.
+本文件记录项目的所有重要变更。
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
+本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
 ## [3.0.0] - 2025-01-XX
 
-### Added
+### 新增
 
-#### Dual-Agent Architecture
-- **Decision Agent**: Intelligent decision-making agent that acts as the brain of the system
-  - Understands user intent and context
-  - Makes decisions based on Soul profile
-  - Delegates tasks to Worker Agent
-  - Evaluates execution results
-  - Interacts with user for clarifications
-  - State machine for decision flow (UNDERSTAND → ANALYZE → DECIDE → DELEGATE → EVALUATE → COMPLETE)
+#### 双层 Agent 架构
+- **Decision Agent（决策代理）**: 智能决策代理，作为系统的大脑
+  - 理解用户意图和上下文
+  - 基于 Soul 配置文件做决策
+  - 委派任务给 Worker Agent
+  - 评估执行结果
+  - 与用户交互以获取澄清
+  - 决策流程状态机（UNDERSTAND → ANALYZE → DECIDE → DELEGATE → EVALUATE → COMPLETE）
 
-- **Worker Agent**: Task execution agent that focuses on execution
-  - Executes Plan → Generate → Evaluation flow
-  - Returns objective data without making decisions
-  - Supports outputting options for decision-making
-  - Reports execution status and progress
+- **Worker Agent（工作代理）**: 任务执行代理，专注于执行
+  - 执行 Plan → Generate → Evaluation 流程
+  - 返回客观数据，不做决策
+  - 支持输出选项供决策
+  - 报告执行状态和进度
 
-- **Agent Orchestrator**: Communication hub between agents
-  - Manages agent communication and message passing
-  - Controls agent lifecycle
-  - Supports concurrent execution
-  - Logs and tracks all messages
+- **Agent Orchestrator（代理编排器）**: Agent 间的通信枢纽
+  - 管理 Agent 通信和消息传递
+  - 控制 Agent 生命周期
+  - 支持并发执行
+  - 记录和追踪所有消息
 
-- **Context Manager**: State management system
-  - Short-term context (in-memory) for fast access
-  - Long-term context (SQLite) for persistence
-  - Auto-sync between storage layers
-  - Context isolation (user/session/project)
-  - Size management and cleanup
+- **Context Manager（上下文管理器）**: 状态管理系统
+  - 短期上下文（内存）用于快速访问
+  - 长期上下文（SQLite）用于持久化
+  - 存储层间的自动同步
+  - 上下文隔离（用户/会话/项目）
+  - 大小管理和清理
 
-#### Extended Decision Types
-- **Code Acceptance**: Accept, improve, or regenerate code based on quality
-- **Technology Choice**: Select technologies based on risk tolerance
-- **Architecture Decision**: Choose architecture patterns based on structure preference
-- **Implementation Decision**: Select implementation approaches based on detail orientation
+#### 扩展的决策类型
+- **代码接受**: 基于质量接受、改进或重新生成代码
+- **技术选型**: 基于风险容忍度选择技术
+- **架构决策**: 基于结构偏好选择架构模式
+- **实现决策**: 基于细节导向选择实现方式
 
-#### Enhanced Soul Profile Integration
-- Extended SoulRuleEngine with structure preference rules
-- Extended SoulRuleEngine with detail orientation rules
-- Decision context passing mechanism
-- Decision explanation and reasoning
+#### 增强的 Soul Profile 集成
+- 扩展 SoulRuleEngine 添加结构偏好规则
+- 扩展 SoulRuleEngine 添加细节导向规则
+- 决策上下文传递机制
+- 决策解释和推理
 
-### Changed
+### 变更
 
-#### BREAKING: API Changes
-- `AutonomousExecutor.execute()` return structure changed
-  - Old: `{"status": "success", "results": [...]}`
-  - New: `{"status": "success", "decision": {...}, "worker_result": {...}}`
-- Decision phase output format extended to support multiple types
-- Worker phase output format standardized (removed decision fields)
+#### 破坏性变更：API 变更
+- `AutonomousExecutor.execute()` 返回结构变更
+  - 旧：`{"status": "success", "results": [...]}`
+  - 新：`{"status": "success", "decision": {...}, "worker_result": {...}}`
+- Decision 阶段输出格式扩展以支持多种类型
+- Worker 阶段输出格式标准化（移除决策字段）
 
-#### Refactored Components
-- `AutonomousExecutor` simplified to agent orchestrator
-- Backward compatibility layer with `legacy_mode` parameter
-- New/old API format conversion utilities
+#### 重构组件
+- `AutonomousExecutor` 简化为 Agent 编排器
+- 通过 `legacy_mode` 参数实现向后兼容层
+- 新旧 API 格式转换工具
 
-### Improved
+### 改进
 
-#### Decision Quality
-- Centralized decision logic in Decision Agent
-- Soul profile integration for personalized decisions
-- Context-aware decision making
-- Decision explanations with reasoning chain
+#### 决策质量
+- 在 Decision Agent 中集中决策逻辑
+- Soul profile 集成实现个性化决策
+- 上下文感知的决策制定
+- 带推理链的决策解释
 
-#### User Experience
-- Proactive user interaction
-- Decision explanations
-- Contextual awareness across sessions
-- Better error handling and recovery
+#### 用户体验
+- 主动的用户交互
+- 决策解释
+- 跨会话的上下文感知
+- 更好的错误处理和恢复
 
-#### Architecture
-- Clear separation of concerns (Decision vs Execution)
-- Better extensibility for new decision types
-- Modular architecture for easy maintenance
-- Improved testability
+#### 架构
+- 清晰的关注点分离（决策 vs 执行）
+- 更好的扩展性支持新决策类型
+- 模块化架构便于维护
+- 改进的可测试性
 
-### Performance
+### 性能
 
-#### Monitoring
-- LLM call tracking and metrics
-- Decision loop counting
-- Context size monitoring
-- Execution time tracking
+#### 监控
+- LLM 调用追踪和指标
+- 决策循环计数
+- 上下文大小监控
+- 执行时间追踪
 
-#### Optimization
-- Context caching to reduce LLM calls
-- Decision caching for repeated scenarios
-- Optimized prompt engineering
+#### 优化
+- 上下文缓存减少 LLM 调用
+- 决策缓存处理重复场景
+- 优化的 prompt 工程
 
-### Documentation
+### 文档
 
-#### New Documentation
-- Architecture design document
-- Migration guide from legacy to new architecture
-- Usage examples for different scenarios
-- API documentation updates
+#### 新增文档
+- 架构设计文档
+- 从旧架构到新架构的迁移指南
+- 不同场景的使用示例
+- API 文档更新
 
-#### Examples
-- Simple task execution example
-- Technology choice decision example
-- Architecture decision example
-- Integration examples
+#### 示例
+- 简单任务执行示例
+- 技术选型决策示例
+- 架构决策示例
+- 集成示例
 
-### Testing
+### 测试
 
-#### New Tests
-- Unit tests for Decision Agent
-- Unit tests for Worker Agent
-- Unit tests for Agent Orchestrator
-- Unit tests for Context Manager
-- Integration tests for agent collaboration
-- Scenario tests for different decision types
+#### 新增测试
+- Decision Agent 单元测试
+- Worker Agent 单元测试
+- Agent Orchestrator 单元测试
+- Context Manager 单元测试
+- Agent 协作集成测试
+- 不同决策类型的场景测试
 
-### Migration
+### 迁移
 
-#### Compatibility Layer
-- `legacy_mode` parameter for backward compatibility
-- Result format conversion utilities
-- Gradual migration path
+#### 兼容层
+- `legacy_mode` 参数实现向后兼容
+- 结果格式转换工具
+- 渐进式迁移路径
 
-#### Migration Guide
-- Step-by-step migration instructions
-- Breaking changes documentation
-- Common issues and solutions
-- Rollback plan
+#### 迁移指南
+- 分步迁移说明
+- 破坏性变更文档
+- 常见问题和解决方案
+- 回滚计划
 
 ## [2.0.0] - 2024-XX-XX
 
-### Added
-- Initial autonomous executor implementation
-- Plan → Generate → Evaluation → Decision flow
-- Soul profile integration
-- Proxy decision making
-- Decision logging
+### 新增
+- 初始自主执行器实现
+- Plan → Generate → Evaluation → Decision 流程
+- Soul profile 集成
+- 代理决策制定
+- 决策日志记录
 
 ## [1.0.0] - 2024-XX-XX
 
-### Added
-- Initial CLI implementation
-- Soul profile generation
-- Basic task execution
-- Configuration management
+### 新增
+- 初始 CLI 实现
+- Soul profile 生成
+- 基本任务执行
+- 配置管理
