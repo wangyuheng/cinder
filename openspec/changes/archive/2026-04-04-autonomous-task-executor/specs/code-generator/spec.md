@@ -1,123 +1,123 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Generate code from descriptions
-The system SHALL generate code from natural language descriptions using Ollama.
+### 需求: 从描述生成代码
+系统应使用 Ollama 从自然语言描述生成代码。
 
-#### Scenario: Python code generation
-- **WHEN** task description is "创建一个计算斐波那契数列的函数"
-- **THEN** system generates Python function code
-- **AND** code includes proper function signature
-- **AND** code includes docstring
+#### 场景: Python 代码生成
+- **当** 任务描述是 "创建一个计算斐波那契数列的函数"
+- **则** 系统生成 Python 函数代码
+- **且** 代码包含正确的函数签名
+- **且** 代码包含文档字符串
 
-#### Scenario: Multi-file code generation
-- **WHEN** task requires multiple files
-- **THEN** system generates code for each file
-- **AND** system maintains consistency between files
-- **AND** system generates proper import statements
+#### 场景: 多文件代码生成
+- **当** 任务需要多个文件
+- **则** 系统为每个文件生成代码
+- **且** 系统保持文件间的一致性
+- **且** 系统生成正确的导入语句
 
-#### Scenario: Framework-specific code
-- **WHEN** task specifies a framework (e.g., "使用FastAPI创建用户API")
-- **THEN** system generates framework-specific code
-- **AND** code follows framework conventions
-- **AND** code uses framework-specific features
+#### 场景: 特定框架代码
+- **当** 任务指定框架（如 "使用FastAPI创建用户API"）
+- **则** 系统生成特定框架的代码
+- **且** 代码遵循框架约定
+- **且** 代码使用框架特定功能
 
-### Requirement: Support multiple programming languages
-The system SHALL support code generation for multiple programming languages.
+### 需求: 支持多种编程语言
+系统应支持多种编程语言的代码生成。
 
-#### Scenario: Language detection
-- **WHEN** task description implies a specific language
-- **THEN** system detects the target language
-- **AND** system generates code in that language
+#### 场景: 语言检测
+- **当** 任务描述暗示特定语言
+- **则** 系统检测目标语言
+- **且** 系统以该语言生成代码
 
-#### Scenario: Explicit language specification
-- **WHEN** user specifies language with `--language python`
-- **THEN** system generates code in specified language
-- **AND** system ignores language hints in description
+#### 场景: 显式语言指定
+- **当** 用户使用 `--language python` 指定语言
+- **则** 系统以指定语言生成代码
+- **且** 系统忽略描述中的语言提示
 
-#### Scenario: Multi-language project
-- **WHEN** project requires multiple languages
-- **THEN** system generates code in appropriate language for each file
-- **AND** system maintains consistency across languages
+#### 场景: 多语言项目
+- **当** 项目需要多种语言
+- **则** 系统为每个文件以适当的语言生成代码
+- **且** 系统保持跨语言的一致性
 
-### Requirement: Format generated code
-The system SHALL format generated code according to language best practices.
+### 需求: 格式化生成的代码
+系统应根据语言最佳实践格式化生成的代码。
 
-#### Scenario: Python code formatting
-- **WHEN** Python code is generated
-- **THEN** system formats code with Black
-- **AND** system sorts imports with isort
-- **AND** system validates with Ruff
+#### 场景: Python 代码格式化
+- **当** 生成 Python 代码
+- **则** 系统使用 Black 格式化代码
+- **且** 系统使用 isort 排序导入
+- **且** 系统使用 Ruff 验证
 
-#### Scenario: JavaScript code formatting
-- **WHEN** JavaScript code is generated
-- **THEN** system formats code with Prettier
-- **AND** system follows ESLint rules
+#### 场景: JavaScript 代码格式化
+- **当** 生成 JavaScript 代码
+- **则** 系统使用 Prettier 格式化代码
+- **且** 系统遵循 ESLint 规则
 
-#### Scenario: Formatting failure handling
-- **WHEN** code formatting fails
-- **THEN** system logs warning
-- **AND** system uses unformatted code
-- **AND** system notifies user
+#### 场景: 格式化失败处理
+- **当** 代码格式化失败
+- **则** 系统记录警告
+- **且** 系统使用未格式化的代码
+- **且** 系统通知用户
 
-### Requirement: Validate generated code
-The system SHALL validate generated code for syntax and basic correctness.
+### 需求: 验证生成的代码
+系统应验证生成代码的语法和基本正确性。
 
-#### Scenario: Syntax validation
-- **WHEN** code is generated
-- **THEN** system checks syntax
-- **AND** system rejects code with syntax errors
-- **AND** system attempts regeneration
+#### 场景: 语法验证
+- **当** 代码生成
+- **则** 系统检查语法
+- **且** 系统拒绝有语法错误的代码
+- **且** 系统尝试重新生成
 
-#### Scenario: Import validation
-- **WHEN** code includes imports
-- **THEN** system validates import statements
-- **AND** system checks for circular imports
-- **AND** system verifies module availability
+#### 场景: 导入验证
+- **当** 代码包含导入
+- **则** 系统验证导入语句
+- **且** 系统检查循环导入
+- **且** 系统验证模块可用性
 
-#### Scenario: Type checking
-- **WHEN** Python code is generated
-- **THEN** system runs mypy type checking
-- **AND** system reports type errors
-- **AND** system suggests fixes
+#### 场景: 类型检查
+- **当** 生成 Python 代码
+- **则** 系统运行 mypy 类型检查
+- **且** 系统报告类型错误
+- **且** 系统建议修复
 
-### Requirement: Apply code templates
-The system SHALL support code templates for common patterns.
+### 需求: 应用代码模板
+系统应支持常见模式的代码模板。
 
-#### Scenario: Built-in templates
-- **WHEN** task matches a built-in template pattern
-- **THEN** system uses template as starting point
-- **AND** system customizes template for specific requirements
-- **AND** system maintains template structure
+#### 场景: 内置模板
+- **当** 任务匹配内置模板模式
+- **则** 系统使用模板作为起点
+- **且** 系统根据特定需求定制模板
+- **且** 系统保持模板结构
 
-#### Scenario: Custom templates
-- **WHEN** user provides custom template directory
-- **THEN** system loads custom templates
-- **AND** system matches task to template
-- **AND** system applies template with customization
+#### 场景: 自定义模板
+- **当** 用户提供自定义模板目录
+- **则** 系统加载自定义模板
+- **且** 系统将任务匹配到模板
+- **且** 系统应用模板并进行定制
 
-#### Scenario: Template variables
-- **WHEN** template contains variables
-- **THEN** system substitutes variables with actual values
-- **AND** system validates substituted values
-- **AND** system maintains code consistency
+#### 场景: 模板变量
+- **当** 模板包含变量
+- **则** 系统用实际值替换变量
+- **且** 系统验证替换的值
+- **且** 系统保持代码一致性
 
-### Requirement: Generate documentation
-The system SHALL generate documentation for generated code.
+### 需求: 生成文档
+系统应为生成的代码生成文档。
 
-#### Scenario: Function documentation
-- **WHEN** function is generated
-- **THEN** system generates docstring
-- **AND** docstring includes parameter descriptions
-- **AND** docstring includes return value description
+#### 场景: 函数文档
+- **当** 生成函数
+- **则** 系统生成文档字符串
+- **且** 文档字符串包含参数描述
+- **且** 文档字符串包含返回值描述
 
-#### Scenario: Module documentation
-- **WHEN** module is generated
-- **THEN** system generates module-level docstring
-- **AND** docstring describes module purpose
-- **AND** docstring lists main functions/classes
+#### 场景: 模块文档
+- **当** 生成模块
+- **则** 系统生成模块级文档字符串
+- **且** 文档字符串描述模块用途
+- **且** 文档字符串列出主要函数/类
 
-#### Scenario: README generation
-- **WHEN** project is generated
-- **THEN** system generates README.md
-- **AND** README includes installation instructions
-- **AND** README includes usage examples
+#### 场景: README 生成
+- **当** 生成项目
+- **则** 系统生成 README.md
+- **且** README 包含安装说明
+- **且** README 包含使用示例

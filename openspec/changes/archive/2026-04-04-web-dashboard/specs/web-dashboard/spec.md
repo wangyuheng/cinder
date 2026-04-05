@@ -1,78 +1,78 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Dashboard Home Page
-The system SHALL provide a dashboard home page that displays key metrics and recent activity.
+### 需求: 仪表盘首页
+系统应提供仪表盘首页，显示关键指标和最近活动。
 
-#### Scenario: View dashboard metrics
-- **WHEN** user opens the dashboard home page
-- **THEN** system displays execution count, success rate, decision count, and file count
+#### 场景: 查看仪表盘指标
+- **当** 用户打开仪表盘首页
+- **则** 系统显示执行次数、成功率、决策次数和文件数量
 
-#### Scenario: View recent executions
-- **WHEN** user views the dashboard
-- **THEN** system displays a list of recent executions with status indicators
+#### 场景: 查看最近执行
+- **当** 用户查看仪表盘
+- **则** 系统显示带有状态指示器的最近执行列表
 
-### Requirement: Executions Page
-The system SHALL provide an executions page that lists all execution history.
+### 需求: 执行页面
+系统应提供执行页面，列出所有执行历史。
 
-#### Scenario: View execution list
-- **WHEN** user navigates to the executions page
-- **THEN** system displays a paginated list of all executions
+#### 场景: 查看执行列表
+- **当** 用户导航到执行页面
+- **则** 系统显示所有执行的分页列表
 
-#### Scenario: Filter executions by status
-- **WHEN** user selects a status filter
-- **THEN** system displays only executions matching the selected status
+#### 场景: 按状态筛选执行
+- **当** 用户选择状态筛选器
+- **则** 系统仅显示匹配所选状态的执行
 
-#### Scenario: View execution details
-- **WHEN** user clicks on an execution
-- **THEN** system displays detailed information including goal, status, created files, and timestamp
+#### 场景: 查看执行详情
+- **当** 用户点击某个执行
+- **则** 系统显示详细信息，包括目标、状态、创建的文件和时间戳
 
-### Requirement: Soul Configuration Page
-The system SHALL provide a page to view and edit Soul configuration.
+### 需求: Soul 配置页面
+系统应提供页面来查看和编辑 Soul 配置。
 
-#### Scenario: View Soul configuration
-- **WHEN** user navigates to the Soul page
-- **THEN** system displays the current Soul profile and trait scores
+#### 场景: 查看 Soul 配置
+- **当** 用户导航到 Soul 页面
+- **则** 系统显示当前 Soul 配置文件和特质分数
 
-#### Scenario: Edit Soul configuration
-- **WHEN** user modifies Soul traits and saves
-- **THEN** system updates the Soul configuration file
+#### 场景: 编辑 Soul 配置
+- **当** 用户修改 Soul 特质并保存
+- **则** 系统更新 Soul 配置文件
 
-### Requirement: Task Trigger Page
-The system SHALL provide a page to manually trigger new execution tasks.
+### 需求: 任务触发页面
+系统应提供页面来手动触发新的执行任务。
 
-#### Scenario: Trigger new execution
-- **WHEN** user enters a goal and clicks execute
-- **THEN** system creates a new execution and displays progress
+#### 场景: 触发新执行
+- **当** 用户输入目标并点击执行
+- **则** 系统创建新执行并显示进度
 
-#### Scenario: Select execution mode
-- **WHEN** user triggers a new execution
-- **THEN** system allows selection of auto, interactive, or dry-run mode
+#### 场景: 选择执行模式
+- **当** 用户触发新执行
+- **则** 系统允许选择 auto、interactive 或 dry-run 模式
 
-### Requirement: Decisions Page
-The system SHALL provide a page to view decision history.
+### 需求: 决策页面
+系统应提供页面来查看决策历史。
 
-#### Scenario: View decision list
-- **WHEN** user navigates to the decisions page
-- **THEN** system displays a paginated list of all decisions
+#### 场景: 查看决策列表
+- **当** 用户导航到决策页面
+- **则** 系统显示所有决策的分页列表
 
-#### Scenario: View decision details
-- **WHEN** user clicks on a decision
-- **THEN** system displays context, confidence score, and reasoning
+#### 场景: 查看决策详情
+- **当** 用户点击某个决策
+- **则** 系统显示上下文、置信度分数和推理
 
-### Requirement: Dark Theme Support
-The system SHALL support dark theme as the default with light theme option.
+### 需求: 深色主题支持
+系统应支持深色主题作为默认，并提供浅色主题选项。
 
-#### Scenario: Default dark theme
-- **WHEN** user first opens the dashboard
-- **THEN** system displays in dark theme
+#### 场景: 默认深色主题
+- **当** 用户首次打开仪表盘
+- **则** 系统以深色主题显示
 
-#### Scenario: Toggle theme
-- **WHEN** user clicks theme toggle
-- **THEN** system switches between dark and light themes
+#### 场景: 切换主题
+- **当** 用户点击主题切换
+- **则** 系统在深色和浅色主题之间切换
 
-### Requirement: Responsive Design
-The system SHALL support both desktop and mobile viewports.
+### 需求: 响应式设计
+系统应支持桌面和移动视口。
 
-#### Scenario: Mobile viewport
-- **WHEN** user accesses dashboard on mobile device
-- **THEN** system displays responsive layout optimized for mobile
+#### 场景: 移动视口
+- **当** 用户在移动设备上访问仪表盘
+- **则** 系统显示针对移动端优化的响应式布局

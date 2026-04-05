@@ -1,9 +1,16 @@
+"""
+Updated execution detail page with real-time progress.
+"""
+
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import { Layout } from '@/components/layout'
 import { notFound } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
+import RealtimeProgressBar from '@/components/progress/RealtimeProgressBar'
+import PhaseTimeline from '@/components/progress/PhaseTimeline'
+import { useState, useEffect } from 'react'
 
 async function fetchExecution(id: string) {
   try {
@@ -18,6 +25,20 @@ export default function ExecutionDetailPage({ params }: { params: { id: string }
     queryKey: ['execution', params.id],
     queryFn: () => fetchExecution(params.id),
   })
+
+  const [phases, setPhases] = useState([])
+
+  useEffect(() => {
+    if (execution?.phase_timestamps) {
+      const phaseList = Object.entries(execution.phase_timestamps).map(([name, data]: [string, any]) => ({
+        name,
+        status: data.duration ? 'completed' : execution.status === 'success' ? 'completed' : 'pending',
+        duration: data.duration,
+        progress: data.duration ? 100 : 0,
+      }))
+      setPhases(phaseList)
+    }
+  }, [execution])
 
   if (isLoading) {
     return (
@@ -61,6 +82,36 @@ export default function ExecutionDetailPage({ params }: { params: { id: string }
             </div>
           </dl>
         </div>
+
+        {execution.status !== 'success' && execution.status !== 'error' && (
+          <div className="bg-card border rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">实时进度</h3>
+            <RealtimeProgressBar executionId={execution.id} />
+          </div>
+        )}
+
+        {phases.length > 0 && (
+          <div className="bg-card border rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">阶段时间线</h3>
+            <PhaseTimeline phases={phases} />
+          </div>
+        )}
+
+        {execution.speed_metrics && (
+          <div className="bg-card border rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">速度指标</h3>
+            <dl className="space-y-3">
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">任务/分钟</dt>
+                <dd>{execution.speed_metrics.tasks_per_minute?.toFixed(2) || 'N/A'}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">平均任务时间</dt>
+                <dd>{execution.speed_metrics.average_task_time?.toFixed(2) || 'N/A'}s</dd>
+              </div>
+            </dl>
+          </div>
+        )}
 
         {execution.created_files?.length > 0 && (
           <div className="bg-card border rounded-lg p-6">

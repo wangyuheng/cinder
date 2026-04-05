@@ -1,127 +1,127 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Evaluate execution results
-The system SHALL evaluate execution results based on soul profile.
+### 需求: 评估执行结果
+系统应基于 soul 画像评估执行结果。
 
-#### Scenario: Risk consistency evaluation
-- **WHEN** code is generated
-- **THEN** system checks if code matches user's risk tolerance
-- **AND** system flags high-risk code for conservative users
-- **AND** system suggests alternatives if mismatch
+#### 场景: 风险一致性评估
+- **当** 代码生成
+- **则** 系统检查代码是否匹配用户的风险容忍度
+- **且** 系统为保守用户标记高风险代码
+- **且** 系统在不匹配时建议替代方案
 
-#### Scenario: Style consistency evaluation
-- **WHEN** code style is evaluated
-- **THEN** system checks if code matches user's communication preferences
-- **AND** system adjusts code comments and documentation style
-- **AND** system ensures code readability matches user preference
+#### 场景: 风格一致性评估
+- **当** 评估代码风格
+- **则** 系统检查代码是否匹配用户的沟通偏好
+- **且** 系统调整代码注释和文档风格
+- **且** 系统确保代码可读性匹配用户偏好
 
-#### Scenario: Quality evaluation
-- **WHEN** code quality is evaluated
-- **THEN** system checks code complexity
-- **AND** system checks code maintainability
-- **AND** system assigns quality score
+#### 场景: 质量评估
+- **当** 评估代码质量
+- **则** 系统检查代码复杂度
+- **且** 系统检查代码可维护性
+- **且** 系统分配质量分数
 
-### Requirement: Provide improvement suggestions
-The system SHALL provide suggestions for improving execution results.
+### 需求: 提供改进建议
+系统应为改进执行结果提供建议。
 
-#### Scenario: Code improvement suggestions
-- **WHEN** reflection identifies improvement opportunities
-- **THEN** system generates specific suggestions
-- **AND** system explains rationale for each suggestion
-- **AND** system offers to regenerate with improvements
+#### 场景: 代码改进建议
+- **当** 反思识别到改进机会
+- **则** 系统生成具体建议
+- **且** 系统解释每条建议的理由
+- **且** 系统提供带改进的重新生成选项
 
-#### Scenario: Architecture improvement suggestions
-- **WHEN** reflection identifies architectural issues
-- **THEN** system suggests architectural improvements
-- **AND** system explains benefits of changes
-- **AND** system offers to restructure code
+#### 场景: 架构改进建议
+- **当** 反思识别到架构问题
+- **则** 系统建议架构改进
+- **且** 系统解释变更的好处
+- **且** 系统提供重构代码的选项
 
-#### Scenario: Performance improvement suggestions
-- **WHEN** reflection identifies performance issues
-- **THEN** system suggests optimizations
-- **AND** system provides performance estimates
-- **AND** system offers to optimize code
+#### 场景: 性能改进建议
+- **当** 反思识别到性能问题
+- **则** 系统建议优化
+- **且** 系统提供性能估算
+- **且** 系统提供优化代码的选项
 
-### Requirement: Support iterative refinement
-The system SHALL support iterative refinement through reflection loops.
+### 需求: 支持迭代优化
+系统应通过反思循环支持迭代优化。
 
-#### Scenario: Single reflection loop
-- **WHEN** initial execution completes
-- **THEN** system performs reflection
-- **AND** system identifies improvements
-- **AND** system regenerates code if needed
+#### 场景: 单次反思循环
+- **当** 初始执行完成
+- **则** 系统执行反思
+- **且** 系统识别改进
+- **且** 系统在需要时重新生成代码
 
-#### Scenario: Multiple reflection loops
-- **WHEN** user enables multiple reflection loops
-- **THEN** system iterates until quality threshold is met
-- **AND** system limits iterations to configured maximum
-- **AND** system reports progress after each iteration
+#### 场景: 多次反思循环
+- **当** 用户启用多次反思循环
+- **则** 系统迭代直到满足质量阈值
+- **且** 系统将迭代限制为配置的最大值
+- **且** 系统在每次迭代后报告进度
 
-#### Scenario: Reflection timeout
-- **WHEN** reflection takes too long
-- **THEN** system stops reflection
-- **AND** system uses best result so far
-- **AND** system notifies user of timeout
+#### 场景: 反思超时
+- **当** 反思耗时过长
+- **则** 系统停止反思
+- **且** 系统使用目前最好的结果
+- **且** 系统通知用户超时
 
-### Requirement: Track reflection history
-The system SHALL track reflection history for each execution.
+### 需求: 追踪反思历史
+系统应追踪每次执行的反思历史。
 
-#### Scenario: Reflection log storage
-- **WHEN** reflection is performed
-- **THEN** system stores reflection results
-- **AND** system stores suggestions made
-- **AND** system stores actions taken
+#### 场景: 反思日志存储
+- **当** 执行反思
+- **则** 系统存储反思结果
+- **且** 系统存储提出的建议
+- **且** 系统存储采取的行动
 
-#### Scenario: Reflection history query
-- **WHEN** user queries reflection history
-- **THEN** system displays past reflections
-- **AND** system shows improvements made
-- **AND** system shows final decisions
+#### 场景: 反思历史查询
+- **当** 用户查询反思历史
+- **则** 系统显示过去的反思
+- **且** 系统显示所做的改进
+- **且** 系统显示最终决策
 
-#### Scenario: Reflection statistics
-- **WHEN** user requests reflection statistics
-- **THEN** system shows number of reflections performed
-- **AND** system shows average improvement per reflection
-- **AND** system shows most common issues identified
+#### 场景: 反思统计
+- **当** 用户请求反思统计
+- **则** 系统显示执行的反思次数
+- **且** 系统显示每次反思的平均改进
+- **且** 系统显示识别的最常见问题
 
-### Requirement: Apply soul-based decision rules
-The system SHALL apply soul-based decision rules during reflection.
+### 需求: 应用基于 soul 的决策规则
+系统应在反思期间应用基于 soul 的决策规则。
 
-#### Scenario: Risk-based decisions
-- **WHEN** evaluating risky code
-- **THEN** system applies user's risk_tolerance trait
-- **AND** system makes conservative choices for low risk tolerance
-- **AND** system allows aggressive choices for high risk tolerance
+#### 场景: 基于风险的决策
+- **当** 评估风险代码
+- **则** 系统应用用户的 risk_tolerance 特质
+- **且** 系统为低风险容忍度做出保守选择
+- **且** 系统为高风险容忍度允许激进选择
 
-#### Scenario: Communication-based decisions
-- **WHEN** evaluating code documentation
-- **THEN** system applies user's communication_preferences
-- **AND** system adjusts documentation detail level
-- **AND** system adjusts comment style
+#### 场景: 基于沟通的决策
+- **当** 评估代码文档
+- **则** 系统应用用户的 communication_preferences
+- **且** 系统调整文档详细程度
+- **且** 系统调整注释风格
 
-#### Scenario: Structure-based decisions
-- **WHEN** evaluating code structure
-- **THEN** system applies user's structure preference
-- **AND** system creates more structure for high structure need
-- **AND** system allows flexible structure for low structure need
+#### 场景: 基于结构的决策
+- **当** 评估代码结构
+- **则** 系统应用用户的结构偏好
+- **且** 系统为高结构需求创建更多结构
+- **且** 系统为低结构需求允许灵活结构
 
-### Requirement: Explain reflection decisions
-The system SHALL provide explanations for reflection decisions.
+### 需求: 解释反思决策
+系统应为反思决策提供解释。
 
-#### Scenario: Decision explanation
-- **WHEN** reflection makes a decision
-- **THEN** system explains the rationale
-- **AND** system cites relevant soul traits
-- **AND** system shows alternative options considered
+#### 场景: 决策解释
+- **当** 反思做出决策
+- **则** 系统解释理由
+- **且** 系统引用相关的 soul 特质
+- **且** 系统显示考虑的替代选项
 
-#### Scenario: Conflict explanation
-- **WHEN** soul traits conflict
-- **THEN** system explains the conflict
-- **AND** system shows how conflict was resolved
-- **AND** system allows user to override
+#### 场景: 冲突解释
+- **当** soul 特质冲突
+- **则** 系统解释冲突
+- **且** 系统显示如何解决冲突
+- **且** 系统允许用户覆盖
 
-#### Scenario: Learning from feedback
-- **WHEN** user provides feedback on reflection
-- **THEN** system learns from feedback
-- **AND** system adjusts future reflections
-- **AND** system stores feedback in soul profile
+#### 场景: 从反馈学习
+- **当** 用户提供反思反馈
+- **则** 系统从反馈学习
+- **且** 系统调整未来的反思
+- **且** 系统将反馈存储在 soul 画像中

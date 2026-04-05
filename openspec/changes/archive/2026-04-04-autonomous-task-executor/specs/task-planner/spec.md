@@ -1,102 +1,102 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Decompose complex goals
-The system SHALL decompose complex goals into executable subtasks.
+### 需求: 分解复杂目标
+系统应将复杂目标分解为可执行的子任务。
 
-#### Scenario: Simple goal decomposition
-- **WHEN** user provides goal "创建一个Python脚本"
-- **THEN** system creates a single subtask "创建Python文件"
-- **AND** system returns task tree with one node
+#### 场景: 简单目标分解
+- **当** 用户提供目标 "创建一个Python脚本"
+- **则** 系统创建单个子任务 "创建Python文件"
+- **且** 系统返回包含一个节点的任务树
 
-#### Scenario: Multi-step goal decomposition
-- **WHEN** user provides goal "做个记账web应用"
-- **THEN** system decomposes into multiple subtasks
-- **AND** subtasks include: "设计数据模型", "创建后端API", "创建前端界面", "配置数据库"
-- **AND** system identifies dependencies between subtasks
+#### 场景: 多步骤目标分解
+- **当** 用户提供目标 "做个记账web应用"
+- **则** 系统分解为多个子任务
+- **且** 子任务包括："设计数据模型"、"创建后端API"、"创建前端界面"、"配置数据库"
+- **且** 系统识别子任务之间的依赖关系
 
-#### Scenario: Ambiguous goal clarification
-- **WHEN** user provides ambiguous goal "做个应用"
-- **THEN** system asks clarifying questions
-- **AND** system suggests common application types
-- **AND** system waits for user specification
+#### 场景: 模糊目标澄清
+- **当** 用户提供模糊目标 "做个应用"
+- **则** 系统询问澄清问题
+- **且** 系统建议常见应用类型
+- **且** 系统等待用户指定
 
-### Requirement: Generate task dependency graph
-The system SHALL generate a dependency graph for subtasks.
+### 需求: 生成任务依赖图
+系统应为子任务生成依赖图。
 
-#### Scenario: Linear dependencies
-- **WHEN** goal requires sequential steps
-- **THEN** system creates linear task chain
-- **AND** each task depends on previous task completion
+#### 场景: 线性依赖
+- **当** 目标需要顺序步骤
+- **则** 系统创建线性任务链
+- **且** 每个任务依赖前一个任务完成
 
-#### Scenario: Parallel tasks
-- **WHEN** goal has independent subtasks
-- **THEN** system identifies parallelizable tasks
-- **AND** system marks tasks as parallel-executable
-- **AND** system optimizes execution order
+#### 场景: 并行任务
+- **当** 目标有独立的子任务
+- **则** 系统识别可并行化的任务
+- **且** 系统将任务标记为可并行执行
+- **且** 系统优化执行顺序
 
-#### Scenario: Complex dependencies
-- **WHEN** goal has complex dependency structure
-- **THEN** system creates directed acyclic graph (DAG)
-- **AND** system identifies critical path
-- **AND** system detects circular dependencies
+#### 场景: 复杂依赖
+- **当** 目标有复杂的依赖结构
+- **则** 系统创建有向无环图（DAG）
+- **且** 系统识别关键路径
+- **且** 系统检测循环依赖
 
-### Requirement: Estimate task complexity
-The system SHALL estimate complexity for each subtask.
+### 需求: 估算任务复杂度
+系统应估算每个子任务的复杂度。
 
-#### Scenario: Simple task
-- **WHEN** subtask is "创建单个文件"
-- **THEN** system estimates low complexity
-- **AND** system predicts short execution time
+#### 场景: 简单任务
+- **当** 子任务是 "创建单个文件"
+- **则** 系统估算为低复杂度
+- **且** 系统预测短执行时间
 
-#### Scenario: Complex task
-- **WHEN** subtask is "实现用户认证系统"
-- **THEN** system estimates high complexity
-- **AND** system suggests breaking into smaller subtasks
+#### 场景: 复杂任务
+- **当** 子任务是 "实现用户认证系统"
+- **则** 系统估算为高复杂度
+- **且** 系统建议分解为更小的子任务
 
-#### Scenario: Unknown complexity
-- **WHEN** system cannot estimate complexity
-- **THEN** system marks task as "unknown complexity"
-- **AND** system proceeds with caution
-- **AND** system monitors execution time
+#### 场景: 未知复杂度
+- **当** 系统无法估算复杂度
+- **则** 系统将任务标记为 "未知复杂度"
+- **且** 系统谨慎进行
+- **且** 系统监控执行时间
 
-### Requirement: Support dynamic replanning
-The system SHALL support dynamic task replanning during execution.
+### 需求: 支持动态重新规划
+系统应在执行期间支持动态任务重新规划。
 
-#### Scenario: Task failure replanning
-- **WHEN** a subtask fails
-- **THEN** system replans remaining tasks
-- **AND** system suggests alternative approaches
-- **AND** system updates task tree
+#### 场景: 任务失败重新规划
+- **当** 子任务失败
+- **则** 系统重新规划剩余任务
+- **且** 系统建议替代方法
+- **且** 系统更新任务树
 
-#### Scenario: User intervention replanning
-- **WHEN** user requests to change approach mid-execution
-- **THEN** system pauses execution
-- **AND** system accepts new requirements
-- **AND** system replans task tree
+#### 场景: 用户干预重新规划
+- **当** 用户在执行中途请求更改方法
+- **则** 系统暂停执行
+- **且** 系统接受新需求
+- **且** 系统重新规划任务树
 
-#### Scenario: Reflection-triggered replanning
-- **WHEN** reflection engine suggests better approach
-- **THEN** system evaluates suggestion
-- **AND** system replans if suggestion improves outcome
-- **AND** system notifies user of changes
+#### 场景: 反思触发的重新规划
+- **当** 反思引擎建议更好的方法
+- **则** 系统评估建议
+- **且** 系统在建议能改善结果时重新规划
+- **且** 系统通知用户变更
 
-### Requirement: Provide task preview
-The system SHALL provide preview of planned tasks before execution.
+### 需求: 提供任务预览
+系统应在执行前提供计划任务的预览。
 
-#### Scenario: Task tree visualization
-- **WHEN** user runs `cinder execute "goal" --preview`
-- **THEN** system displays task tree structure
-- **AND** system shows task descriptions
-- **AND** system shows estimated complexity
+#### 场景: 任务树可视化
+- **当** 用户运行 `cinder execute "goal" --preview`
+- **则** 系统显示任务树结构
+- **且** 系统显示任务描述
+- **且** 系统显示估算复杂度
 
-#### Scenario: Task details view
-- **WHEN** user selects a specific task in preview
-- **THEN** system displays detailed task information
-- **AND** system shows expected outputs
-- **AND** system shows dependencies
+#### 场景: 任务详情视图
+- **当** 用户在预览中选择特定任务
+- **则** 系统显示详细任务信息
+- **且** 系统显示预期输出
+- **且** 系统显示依赖关系
 
-#### Scenario: Task modification in preview
-- **WHEN** user modifies task in preview mode
-- **THEN** system updates task tree
-- **AND** system validates dependencies
-- **AND** system saves modified plan
+#### 场景: 预览中修改任务
+- **当** 用户在预览模式中修改任务
+- **则** 系统更新任务树
+- **且** 系统验证依赖关系
+- **且** 系统保存修改的计划

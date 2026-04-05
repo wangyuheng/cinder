@@ -1,151 +1,151 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Create files and directories
-The system SHALL create files and directories in a safe manner.
+### 需求: 创建文件和目录
+系统应以安全方式创建文件和目录。
 
-#### Scenario: Create single file
-- **WHEN** task requires creating a file
-- **THEN** system creates file at specified path
-- **AND** system sets appropriate file permissions
-- **AND** system logs file creation
+#### 场景: 创建单个文件
+- **当** 任务需要创建文件
+- **则** 系统在指定路径创建文件
+- **且** 系统设置适当的文件权限
+- **且** 系统记录文件创建
 
-#### Scenario: Create directory structure
-- **WHEN** task requires creating directories
-- **THEN** system creates directory tree
-- **AND** system creates parent directories if needed
-- **AND** system sets appropriate directory permissions
+#### 场景: 创建目录结构
+- **当** 任务需要创建目录
+- **则** 系统创建目录树
+- **且** 系统在需要时创建父目录
+- **且** 系统设置适当的目录权限
 
-#### Scenario: Create nested files
-- **WHEN** task requires creating files in nested directories
-- **THEN** system creates directory structure first
-- **AND** system creates files in correct locations
-- **AND** system maintains path consistency
+#### 场景: 创建嵌套文件
+- **当** 任务需要在嵌套目录中创建文件
+- **则** 系统首先创建目录结构
+- **且** 系统在正确位置创建文件
+- **且** 系统保持路径一致性
 
-### Requirement: Modify existing files
-The system SHALL modify existing files safely.
+### 需求: 修改现有文件
+系统应安全地修改现有文件。
 
-#### Scenario: Append to file
-- **WHEN** task requires appending to file
-- **THEN** system creates backup first
-- **AND** system appends content to file
-- **AND** system logs modification
+#### 场景: 追加到文件
+- **当** 任务需要追加到文件
+- **则** 系统首先创建备份
+- **且** 系统将内容追加到文件
+- **且** 系统记录修改
 
-#### Scenario: Replace file content
-- **WHEN** task requires replacing file content
-- **THEN** system creates backup first
-- **AND** system replaces content
-- **AND** system preserves file metadata
+#### 场景: 替换文件内容
+- **当** 任务需要替换文件内容
+- **则** 系统首先创建备份
+- **且** 系统替换内容
+- **且** 系统保留文件元数据
 
-#### Scenario: Partial file modification
-- **WHEN** task requires modifying part of file
-- **THEN** system creates backup first
-- **AND** system locates modification point
-- **AND** system applies modification precisely
+#### 场景: 部分文件修改
+- **当** 任务需要修改文件的一部分
+- **则** 系统首先创建备份
+- **且** 系统定位修改点
+- **且** 系统精确应用修改
 
-### Requirement: Delete files and directories
-The system SHALL delete files and directories with confirmation.
+### 需求: 删除文件和目录
+系统应在确认后删除文件和目录。
 
-#### Scenario: Delete single file
-- **WHEN** task requires deleting a file
-- **THEN** system asks for confirmation if interactive mode
-- **AND** system creates backup before deletion
-- **AND** system deletes file
-- **AND** system logs deletion
+#### 场景: 删除单个文件
+- **当** 任务需要删除文件
+- **则** 系统在交互模式下请求确认
+- **且** 系统在删除前创建备份
+- **且** 系统删除文件
+- **且** 系统记录删除
 
-#### Scenario: Delete directory
-- **WHEN** task requires deleting a directory
-- **THEN** system asks for confirmation if interactive mode
-- **AND** system creates backup of all files
-- **AND** system deletes directory recursively
-- **AND** system logs deletion
+#### 场景: 删除目录
+- **当** 任务需要删除目录
+- **则** 系统在交互模式下请求确认
+- **且** 系统创建所有文件的备份
+- **且** 系统递归删除目录
+- **且** 系统记录删除
 
-#### Scenario: Delete multiple files
-- **WHEN** task requires deleting multiple files
-- **THEN** system shows list of files to delete
-- **AND** system asks for confirmation once
-- **AND** system creates backup of all files
-- **AND** system deletes all files
+#### 场景: 删除多个文件
+- **当** 任务需要删除多个文件
+- **则** 系统显示要删除的文件列表
+- **且** 系统请求一次确认
+- **且** 系统创建所有文件的备份
+- **且** 系统删除所有文件
 
-### Requirement: Enforce security boundaries
-The system SHALL enforce security boundaries for file operations.
+### 需求: 强制安全边界
+系统应强制执行文件操作的安全边界。
 
-#### Scenario: Working directory restriction
-- **WHEN** file operation is requested outside working directory
-- **THEN** system rejects the operation
-- **AND** system displays error message
-- **AND** system logs security violation
+#### 场景: 工作目录限制
+- **当** 请求在工作目录外进行文件操作
+- **则** 系统拒绝操作
+- **且** 系统显示错误消息
+- **且** 系统记录安全违规
 
-#### Scenario: File type restriction
-- **WHEN** file operation involves restricted file type
-- **THEN** system rejects the operation
-- **AND** system displays list of allowed file types
-- **AND** system logs security violation
+#### 场景: 文件类型限制
+- **当** 文件操作涉及受限文件类型
+- **则** 系统拒绝操作
+- **且** 系统显示允许的文件类型列表
+- **且** 系统记录安全违规
 
-#### Scenario: Permission check
-- **WHEN** file operation requires elevated permissions
-- **THEN** system checks user permissions
-- **AND** system requests permission escalation if needed
-- **AND** system aborts if permission denied
+#### 场景: 权限检查
+- **当** 文件操作需要提升权限
+- **则** 系统检查用户权限
+- **且** 系统在需要时请求权限提升
+- **且** 系统在权限被拒绝时中止
 
-### Requirement: Support rollback operations
-The system SHALL support rollback of file operations.
+### 需求: 支持回滚操作
+系统应支持文件操作的回滚。
 
-#### Scenario: Rollback last operation
-- **WHEN** user requests rollback
-- **THEN** system restores from backup
-- **AND** system removes created files
-- **AND** system logs rollback
+#### 场景: 回滚最后一次操作
+- **当** 用户请求回滚
+- **则** 系统从备份恢复
+- **且** 系统删除创建的文件
+- **且** 系统记录回滚
 
-#### Scenario: Rollback multiple operations
-- **WHEN** user requests rollback to specific point
-- **THEN** system restores all files to that point
-- **AND** system removes all files created after that point
-- **AND** system logs rollback
+#### 场景: 回滚多次操作
+- **当** 用户请求回滚到特定点
+- **则** 系统将所有文件恢复到该点
+- **且** 系统删除该点后创建的所有文件
+- **且** 系统记录回滚
 
-#### Scenario: Rollback failure
-- **WHEN** rollback fails
-- **THEN** system displays error message
-- **AND** system preserves existing backups
-- **AND** system suggests manual recovery
+#### 场景: 回滚失败
+- **当** 回滚失败
+- **则** 系统显示错误消息
+- **且** 系统保留现有备份
+- **且** 系统建议手动恢复
 
-### Requirement: Manage file backups
-The system SHALL manage file backups automatically.
+### 需求: 管理文件备份
+系统应自动管理文件备份。
 
-#### Scenario: Automatic backup creation
-- **WHEN** file is about to be modified or deleted
-- **THEN** system creates backup automatically
-- **AND** system stores backup in designated location
-- **AND** system logs backup creation
+#### 场景: 自动创建备份
+- **当** 文件即将被修改或删除
+- **则** 系统自动创建备份
+- **且** 系统将备份存储在指定位置
+- **且** 系统记录备份创建
 
-#### Scenario: Backup retention
-- **WHEN** backup is created
-- **THEN** system retains backup for configured duration
-- **AND** system automatically cleans up old backups
-- **AND** system logs cleanup
+#### 场景: 备份保留
+- **当** 创建备份
+- **则** 系统保留备份达配置的时长
+- **且** 系统自动清理旧备份
+- **且** 系统记录清理
 
-#### Scenario: Backup restoration
-- **WHEN** user requests backup restoration
-- **THEN** system lists available backups
-- **AND** system restores selected backup
-- **AND** system logs restoration
+#### 场景: 备份恢复
+- **当** 用户请求备份恢复
+- **则** 系统列出可用备份
+- **且** 系统恢复选定的备份
+- **且** 系统记录恢复
 
-### Requirement: Validate file paths
-The system SHALL validate file paths before operations.
+### 需求: 验证文件路径
+系统应在操作前验证文件路径。
 
-#### Scenario: Path sanitization
-- **WHEN** file path is provided
-- **THEN** system sanitizes path
-- **AND** system removes dangerous characters
-- **AND** system resolves relative paths
+#### 场景: 路径清理
+- **当** 提供文件路径
+- **则** 系统清理路径
+- **且** 系统移除危险字符
+- **且** 系统解析相对路径
 
-#### Scenario: Path collision detection
-- **WHEN** file path already exists
-- **THEN** system detects collision
-- **AND** system asks for confirmation to overwrite
-- **AND** system suggests alternative names
+#### 场景: 路径冲突检测
+- **当** 文件路径已存在
+- **则** 系统检测冲突
+- **且** 系统请求确认覆盖
+- **且** 系统建议替代名称
 
-#### Scenario: Path length validation
-- **WHEN** file path exceeds system limit
-- **THEN** system rejects path
-- **AND** system displays error message
-- **AND** system suggests shorter path
+#### 场景: 路径长度验证
+- **当** 文件路径超过系统限制
+- **则** 系统拒绝路径
+- **且** 系统显示错误消息
+- **且** 系统建议更短的路径

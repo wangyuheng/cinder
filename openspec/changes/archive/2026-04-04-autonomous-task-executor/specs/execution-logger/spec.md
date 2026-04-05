@@ -1,148 +1,148 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Log execution events
-The system SHALL log all execution events comprehensively.
+### 需求: 记录执行事件
+系统应全面记录所有执行事件。
 
-#### Scenario: Task start logging
-- **WHEN** a task starts execution
-- **THEN** system logs task start time
-- **AND** system logs task description
-- **AND** system logs task parameters
+#### 场景: 任务开始记录
+- **当** 任务开始执行
+- **则** 系统记录任务开始时间
+- **且** 系统记录任务描述
+- **且** 系统记录任务参数
 
-#### Scenario: Task completion logging
-- **WHEN** a task completes
-- **THEN** system logs completion time
-- **AND** system logs task result
-- **AND** system logs execution duration
+#### 场景: 任务完成记录
+- **当** 任务完成
+- **则** 系统记录完成时间
+- **且** 系统记录任务结果
+- **且** 系统记录执行时长
 
-#### Scenario: Decision logging
-- **WHEN** a decision is made during execution
-- **THEN** system logs decision details
-- **AND** system logs decision rationale
-- **AND** system logs alternatives considered
+#### 场景: 决策记录
+- **当** 执行期间做出决策
+- **则** 系统记录决策详情
+- **且** 系统记录决策理由
+- **且** 系统记录考虑的替代方案
 
-### Requirement: Store structured execution data
-The system SHALL store execution data in structured format.
+### 需求: 存储结构化执行数据
+系统应以结构化格式存储执行数据。
 
-#### Scenario: SQLite storage
-- **WHEN** execution event occurs
-- **THEN** system stores event in SQLite database
-- **AND** system uses structured schema
-- **AND** system maintains data integrity
+#### 场景: SQLite 存储
+- **当** 执行事件发生
+- **则** 系统将事件存储在 SQLite 数据库
+- **且** 系统使用结构化模式
+- **且** 系统维护数据完整性
 
-#### Scenario: JSON serialization
-- **WHEN** complex data needs storage
-- **THEN** system serializes to JSON
-- **AND** system preserves data structure
-- **AND** system ensures UTF-8 encoding
+#### 场景: JSON 序列化
+- **当** 复杂数据需要存储
+- **则** 系统序列化为 JSON
+- **且** 系统保留数据结构
+- **且** 系统确保 UTF-8 编码
 
-#### Scenario: Data indexing
-- **WHEN** data is stored
-- **THEN** system creates appropriate indexes
-- **AND** system optimizes for common queries
-- **AND** system maintains index performance
+#### 场景: 数据索引
+- **当** 数据被存储
+- **则** 系统创建适当的索引
+- **且** 系统优化常见查询
+- **且** 系统维护索引性能
 
-### Requirement: Query execution history
-The system SHALL support querying execution history.
+### 需求: 查询执行历史
+系统应支持查询执行历史。
 
-#### Scenario: Query by goal
-- **WHEN** user queries by goal description
-- **THEN** system returns matching executions
-- **AND** system displays execution summary
-- **AND** system shows execution time
+#### 场景: 按目标查询
+- **当** 用户按目标描述查询
+- **则** 系统返回匹配的执行
+- **且** 系统显示执行摘要
+- **且** 系统显示执行时间
 
-#### Scenario: Query by time range
-- **WHEN** user queries by time range
-- **THEN** system returns executions in range
-- **AND** system displays chronological order
-- **AND** system shows duration statistics
+#### 场景: 按时间范围查询
+- **当** 用户按时间范围查询
+- **则** 系统返回范围内的执行
+- **且** 系统按时间顺序显示
+- **且** 系统显示时长统计
 
-#### Scenario: Query by status
-- **WHEN** user queries by status (success/failure)
-- **THEN** system returns matching executions
-- **AND** system displays failure reasons
-- **AND** system shows retry history
+#### 场景: 按状态查询
+- **当** 用户按状态（成功/失败）查询
+- **则** 系统返回匹配的执行
+- **且** 系统显示失败原因
+- **且** 系统显示重试历史
 
-### Requirement: Generate execution reports
-The system SHALL generate execution reports.
+### 需求: 生成执行报告
+系统应生成执行报告。
 
-#### Scenario: Summary report
-- **WHEN** user requests execution summary
-- **THEN** system generates summary report
-- **AND** report includes total executions
-- **AND** report includes success rate
+#### 场景: 摘要报告
+- **当** 用户请求执行摘要
+- **则** 系统生成摘要报告
+- **且** 报告包含总执行次数
+- **且** 报告包含成功率
 
-#### Scenario: Detailed report
-- **WHEN** user requests detailed report
-- **THEN** system generates detailed report
-- **AND** report includes all execution steps
-- **AND** report includes all decisions made
+#### 场景: 详细报告
+- **当** 用户请求详细报告
+- **则** 系统生成详细报告
+- **且** 报告包含所有执行步骤
+- **且** 报告包含所有做出的决策
 
-#### Scenario: Export report
-- **WHEN** user requests report export
-- **THEN** system exports report to file
-- **AND** system supports multiple formats (JSON, CSV, HTML)
-- **AND** system includes all relevant data
+#### 场景: 导出报告
+- **当** 用户请求报告导出
+- **则** 系统将报告导出到文件
+- **且** 系统支持多种格式（JSON、CSV、HTML）
+- **且** 系统包含所有相关数据
 
-### Requirement: Track file operations
-The system SHALL track all file operations during execution.
+### 需求: 追踪文件操作
+系统应追踪执行期间的所有文件操作。
 
-#### Scenario: File creation tracking
-- **WHEN** file is created
-- **THEN** system logs file path
-- **AND** system logs file size
-- **AND** system logs content hash
+#### 场景: 文件创建追踪
+- **当** 创建文件
+- **则** 系统记录文件路径
+- **且** 系统记录文件大小
+- **且** 系统记录内容哈希
 
-#### Scenario: File modification tracking
-- **WHEN** file is modified
-- **THEN** system logs modification type
-- **AND** system logs before and after state
-- **AND** system logs modification reason
+#### 场景: 文件修改追踪
+- **当** 修改文件
+- **则** 系统记录修改类型
+- **且** 系统记录修改前后状态
+- **且** 系统记录修改原因
 
-#### Scenario: File deletion tracking
-- **WHEN** file is deleted
-- **THEN** system logs file path
-- **AND** system logs backup location
-- **AND** system logs deletion reason
+#### 场景: 文件删除追踪
+- **当** 删除文件
+- **则** 系统记录文件路径
+- **且** 系统记录备份位置
+- **且** 系统记录删除原因
 
-### Requirement: Support execution replay
-The system SHALL support execution replay from logs.
+### 需求: 支持执行重放
+系统应支持从日志重放执行。
 
-#### Scenario: Full replay
-- **WHEN** user requests execution replay
-- **THEN** system replays all steps from log
-- **AND** system displays each step
-- **AND** system shows decision points
+#### 场景: 完整重放
+- **当** 用户请求执行重放
+- **则** 系统从日志重放所有步骤
+- **且** 系统显示每个步骤
+- **且** 系统显示决策点
 
-#### Scenario: Partial replay
-- **WHEN** user requests replay from specific point
-- **THEN** system replays from that point
-- **AND** system skips completed steps
-- **AND** system continues execution
+#### 场景: 部分重放
+- **当** 用户请求从特定点重放
+- **则** 系统从该点重放
+- **且** 系统跳过已完成的步骤
+- **且** 系统继续执行
 
-#### Scenario: Dry-run replay
-- **WHEN** user requests dry-run replay
-- **THEN** system shows what would happen
-- **AND** system does not execute operations
-- **AND** system displays expected results
+#### 场景: 预览重放
+- **当** 用户请求预览重放
+- **则** 系统显示将要发生的操作
+- **且** 系统不执行操作
+- **且** 系统显示预期结果
 
-### Requirement: Analyze execution patterns
-The system SHALL analyze execution patterns.
+### 需求: 分析执行模式
+系统应分析执行模式。
 
-#### Scenario: Success pattern analysis
-- **WHEN** user requests pattern analysis
-- **THEN** system identifies successful patterns
-- **AND** system suggests optimizations
-- **AND** system shows statistics
+#### 场景: 成功模式分析
+- **当** 用户请求模式分析
+- **则** 系统识别成功模式
+- **且** 系统建议优化
+- **且** 系统显示统计
 
-#### Scenario: Failure pattern analysis
-- **WHEN** user requests failure analysis
-- **THEN** system identifies failure patterns
-- **AND** system suggests preventions
-- **AND** system shows failure trends
+#### 场景: 失败模式分析
+- **当** 用户请求失败分析
+- **则** 系统识别失败模式
+- **且** 系统建议预防措施
+- **且** 系统显示失败趋势
 
-#### Scenario: Performance analysis
-- **WHEN** user requests performance analysis
-- **THEN** system analyzes execution times
-- **AND** system identifies bottlenecks
-- **AND** system suggests improvements
+#### 场景: 性能分析
+- **当** 用户请求性能分析
+- **则** 系统分析执行时间
+- **且** 系统识别瓶颈
+- **且** 系统建议改进

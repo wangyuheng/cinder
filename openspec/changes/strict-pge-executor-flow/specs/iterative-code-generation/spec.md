@@ -1,78 +1,78 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Iterative Code Generation
-The system SHALL generate code iteratively with self-evaluation and improvement cycles until quality threshold is met.
+### 需求: 迭代式代码生成
+系统应通过自我评估和改进循环迭代生成代码，直到满足质量阈值。
 
-#### Scenario: Initial code generation
-- **WHEN** a task from the plan is ready for execution
-- **THEN** system generates initial code based on task description and constraints
+#### 场景: 初始代码生成
+- **当** 计划中的任务准备好执行时
+- **则** 系统根据任务描述和约束生成初始代码
 
-#### Scenario: Self-evaluation after generation
-- **WHEN** code is generated
-- **THEN** system performs self-evaluation checking:
-  - Syntax correctness
-  - Logic completeness
-  - Best practices adherence
-  - Documentation completeness
+#### 场景: 生成后自我评估
+- **当** 代码生成完成
+- **则** 系统执行自我评估，检查：
+  - 语法正确性
+  - 逻辑完整性
+  - 最佳实践遵循度
+  - 文档完整性
 
-#### Scenario: Iteration loop
-- **WHEN** self-evaluation score is below quality threshold (default: 0.8)
-- **THEN** system enters iteration loop:
-  - Generates improvement suggestions
-  - Regenerates code with feedback
-  - Re-evaluates new code
-  - Continues until threshold met or max iterations reached
+#### 场景: 迭代循环
+- **当** 自我评估分数低于质量阈值（默认: 0.8）
+- **则** 系统进入迭代循环：
+  - 生成改进建议
+  - 根据反馈重新生成代码
+  - 重新评估新代码
+  - 持续迭代直到满足阈值或达到最大迭代次数
 
-### Requirement: Quality Threshold Enforcement
-The system SHALL enforce a minimum quality threshold before accepting generated code.
+### 需求: 质量阈值强制执行
+系统应在接受生成的代码前强制执行最低质量阈值。
 
-#### Scenario: Quality threshold met
-- **WHEN** code quality score >= 0.8
-- **THEN** system accepts the code and proceeds to Evaluation phase
+#### 场景: 满足质量阈值
+- **当** 代码质量分数 >= 0.8
+- **则** 系统接受代码并进入评估阶段
 
-#### Scenario: Quality threshold not met after max iterations
-- **WHEN** code quality score < 0.8 after 3 iterations
-- **THEN** system either:
-  - Accepts the best version generated
-  - Marks task as failed with quality issues
-  - Requests human intervention
+#### 场景: 最大迭代后仍未满足质量阈值
+- **当** 3 次迭代后代码质量分数仍 < 0.8
+- **则** 系统选择以下之一：
+  - 接受生成的最佳版本
+  - 将任务标记为因质量问题失败
+  - 请求人工干预
 
-### Requirement: Feedback-Driven Improvement
-The system SHALL use evaluation feedback to guide code improvement in each iteration.
+### 需求: 反馈驱动的改进
+系统应使用评估反馈指导每次迭代中的代码改进。
 
-#### Scenario: Incorporate syntax errors
-- **WHEN** self-evaluation finds syntax errors
-- **THEN** next iteration focuses on fixing syntax issues
+#### 场景: 纳入语法错误
+- **当** 自我评估发现语法错误
+- **则** 下一次迭代专注于修复语法问题
 
-#### Scenario: Incorporate logic issues
-- **WHEN** self-evaluation finds logic issues
-- **THEN** next iteration focuses on logic correctness
+#### 场景: 纳入逻辑问题
+- **当** 自我评估发现逻辑问题
+- **则** 下一次迭代专注于逻辑正确性
 
-#### Scenario: Incorporate style issues
-- **WHEN** self-evaluation finds style issues
-- **THEN** next iteration focuses on code style improvements
+#### 场景: 纳入风格问题
+- **当** 自我评估发现风格问题
+- **则** 下一次迭代专注于代码风格改进
 
-### Requirement: Best Version Tracking
-The system SHALL track the best code version across all iterations.
+### 需求: 最佳版本追踪
+系统应追踪所有迭代中的最佳代码版本。
 
-#### Scenario: Track best version
-- **WHEN** multiple iterations are performed
-- **THEN** system keeps track of:
-  - Best quality score achieved
-  - Corresponding code version
-  - Iteration history with scores
+#### 场景: 追踪最佳版本
+- **当** 执行多次迭代
+- **则** 系统追踪：
+  - 达到的最佳质量分数
+  - 对应的代码版本
+  - 带分数的迭代历史
 
-#### Scenario: Return best version
-- **WHEN** iteration loop completes
-- **THEN** system returns the best code version, not necessarily the last one
+#### 场景: 返回最佳版本
+- **当** 迭代循环完成
+- **则** 系统返回最佳代码版本，不一定是最后一个
 
-### Requirement: Iteration Limit
-The system SHALL limit the number of iterations to prevent infinite loops.
+### 需求: 迭代限制
+系统应限制迭代次数以防止无限循环。
 
-#### Scenario: Max iterations reached
-- **WHEN** 3 iterations are completed without meeting quality threshold
-- **THEN** system stops iteration and proceeds with best version
+#### 场景: 达到最大迭代次数
+- **当** 完成 3 次迭代仍未满足质量阈值
+- **则** 系统停止迭代并使用最佳版本继续
 
-#### Scenario: Configurable iteration limit
-- **WHEN** user specifies custom iteration limit
-- **THEN** system uses the specified limit instead of default 3
+#### 场景: 可配置的迭代限制
+- **当** 用户指定自定义迭代限制
+- **则** 系统使用指定的限制而非默认的 3 次

@@ -1,81 +1,81 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Interactive question guidance flow
-The system SHALL provide an interactive command-line interface that guides users through 6 core questions to generate their soul profile.
+### 需求: 交互式问题引导流程
+系统应提供交互式命令行界面，引导用户完成 6 个核心问题以生成其 soul 画像。
 
-#### Scenario: User starts question guidance
-- **WHEN** user runs the `init` command
-- **THEN** system displays a welcome message and starts the question guidance flow
+#### 场景: 用户开始问题引导
+- **当** 用户运行 `init` 命令
+- **则** 系统显示欢迎消息并开始问题引导流程
 
-#### Scenario: User answers all questions
-- **WHEN** user completes all 6 questions with valid inputs
-- **THEN** system generates soul.md and soul.meta.yaml files
-- **AND** system displays a summary of the generated soul profile
+#### 场景: 用户回答所有问题
+- **当** 用户以有效输入完成所有 6 个问题
+- **则** 系统生成 soul.md 和 soul.meta.yaml 文件
+- **且** 系统显示生成的 soul 画像摘要
 
-#### Scenario: User skips optional reason field
-- **WHEN** user presses Enter without typing a reason for a question
-- **THEN** system accepts the empty reason and continues to the next question
+#### 场景: 用户跳过可选原因字段
+- **当** 用户在问题的原因字段按 Enter 而不输入
+- **则** 系统接受空原因并继续下一个问题
 
-#### Scenario: User provides invalid input
-- **WHEN** user enters an invalid option (not A-D)
-- **THEN** system displays an error message and prompts for input again
+#### 场景: 用户提供无效输入
+- **当** 用户输入无效选项（非 A-D）
+- **则** 系统显示错误消息并再次提示输入
 
-### Requirement: Question display and input handling
-The system SHALL display each question with its title, prompt, and available options, and accept user input in a user-friendly manner.
+### 需求: 问题显示和输入处理
+系统应显示每个问题的标题、提示和可用选项，并以用户友好的方式接受用户输入。
 
-#### Scenario: Question with multiple choice options
-- **WHEN** system presents a question
-- **THEN** system displays the question title, prompt text, and 4 options labeled A-D
-- **AND** system prompts user to enter their choice
+#### 场景: 带多选项的问题
+- **当** 系统呈现问题
+- **则** 系统显示问题标题、提示文本和 4 个标记为 A-D 的选项
+- **且** 系统提示用户输入选择
 
-#### Scenario: Optional reason input
-- **WHEN** user selects an option
-- **THEN** system prompts for an optional reason
-- **AND** system allows user to skip by pressing Enter
+#### 场景: 可选原因输入
+- **当** 用户选择一个选项
+- **则** 系统提示输入可选原因
+- **且** 系统允许用户通过按 Enter 跳过
 
-### Requirement: Progress indication
-The system SHALL show progress indication during the question guidance flow.
+### 需求: 进度指示
+系统应在问题引导流程中显示进度指示。
 
-#### Scenario: Display current question number
-- **WHEN** system presents a question
-- **THEN** system displays the current question number and total number of questions
+#### 场景: 显示当前问题编号
+- **当** 系统呈现问题
+- **则** 系统显示当前问题编号和总问题数
 
-#### Scenario: Display completion status
-- **WHEN** user completes all questions
-- **THEN** system displays a completion message before generating soul files
+#### 场景: 显示完成状态
+- **当** 用户完成所有问题
+- **则** 系统在生成 soul 文件前显示完成消息
 
-### Requirement: Soul file generation
-The system SHALL generate both soul.md and soul.meta.yaml files based on user answers.
+### 需求: Soul 文件生成
+系统应根据用户答案生成 soul.md 和 soul.meta.yaml 文件。
 
-#### Scenario: Generate soul.md
-- **WHEN** user completes all questions
-- **THEN** system generates a soul.md file containing the human-readable soul profile
+#### 场景: 生成 soul.md
+- **当** 用户完成所有问题
+- **则** 系统生成包含人类可读 soul 画像的 soul.md 文件
 
-#### Scenario: Generate soul.meta.yaml
-- **WHEN** user completes all questions
-- **THEN** system generates a soul.meta.yaml file containing structured metadata
+#### 场景: 生成 soul.meta.yaml
+- **当** 用户完成所有问题
+- **则** 系统生成包含结构化元数据的 soul.meta.yaml 文件
 
-#### Scenario: Custom output path
-- **WHEN** user specifies a custom output path with --output option
-- **THEN** system generates soul files at the specified path
+#### 场景: 自定义输出路径
+- **当** 用户使用 --output 选项指定自定义输出路径
+- **则** 系统在指定路径生成 soul 文件
 
-### Requirement: Quick mode for experienced users
-The system SHALL provide a quick mode that uses default values to speed up the process.
+### 需求: 为有经验用户提供快速模式
+系统应提供使用默认值加速流程的快速模式。
 
-#### Scenario: User runs in quick mode
-- **WHEN** user runs the `init` command with --quick flag
-- **THEN** system uses default values for optional fields
-- **AND** system minimizes the number of prompts
+#### 场景: 用户以快速模式运行
+- **当** 用户使用 --quick 标志运行 `init` 命令
+- **则** 系统对可选字段使用默认值
+- **且** 系统最小化提示数量
 
-### Requirement: Resume incomplete session
-The system SHALL allow users to resume an incomplete question session.
+### 需求: 恢复未完成的会话
+系统应允许用户恢复未完成的问题会话。
 
-#### Scenario: User interrupts session
-- **WHEN** user presses Ctrl+C during question guidance
-- **THEN** system saves current progress to a temporary file
-- **AND** system displays a message indicating how to resume
+#### 场景: 用户中断会话
+- **当** 用户在问题引导期间按 Ctrl+C
+- **则** 系统将当前进度保存到临时文件
+- **且** 系统显示指示如何恢复的消息
 
-#### Scenario: User resumes session
-- **WHEN** user runs the `init` command with --resume flag
-- **THEN** system loads previous progress from temporary file
-- **AND** system continues from the last unanswered question
+#### 场景: 用户恢复会话
+- **当** 用户使用 --resume 标志运行 `init` 命令
+- **则** 系统从临时文件加载之前的进度
+- **且** 系统从最后一个未回答的问题继续

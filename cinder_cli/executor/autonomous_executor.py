@@ -21,6 +21,12 @@ from cinder_cli.executor.code_generator import CodeGenerator
 from cinder_cli.executor.reflection_engine import ReflectionEngine
 from cinder_cli.executor.file_operations import FileOperations
 from cinder_cli.executor.execution_logger import ExecutionLogger
+from cinder_cli.executor.progress_tracker import ProgressTracker, ExecutionPhase
+from cinder_cli.executor.progress_broadcaster import ProgressBroadcaster
+from cinder_cli.executor.time_recorder import TimeRecorder
+from cinder_cli.executor.speed_calculator import SpeedCalculator
+from cinder_cli.executor.estimation_engine import EstimationEngine
+from cinder_cli.executor.progress_snapshot import ProgressSnapshot
 
 console = Console()
 
@@ -37,6 +43,15 @@ class AutonomousExecutor:
         self.execution_logger = ExecutionLogger(config)
         self.decision_db = DecisionDatabase(config.database_path)
         self.soul_meta = self._load_soul_meta()
+        
+        self.progress_tracker = ProgressTracker()
+        self.progress_broadcaster = ProgressBroadcaster()
+        self.time_recorder = TimeRecorder()
+        self.speed_calculator = SpeedCalculator()
+        self.estimation_engine = EstimationEngine()
+        
+        self._execution_id: int | None = None
+        self._progress_enabled = config.get("progress_tracking", True)
 
     def _load_soul_meta(self) -> dict[str, Any]:
         """Load soul metadata for decision making."""
@@ -64,7 +79,7 @@ class AutonomousExecutor:
         decision_maker = ProxyDecisionMaker(self.soul_meta)
         result = decision_maker.make_decision(context, options)
 
-        if not result:
+        if not result or result.get("decision") is None:
             return options[0] if options else {}
 
         decision_id = self.decision_db.insert_decision(
@@ -77,7 +92,8 @@ class AutonomousExecutor:
 
         console.print(f"[dim]决策 #{decision_id}: 置信度 {result.get('confidence', 0.5):.2f}[/dim]")
 
-        return result.get("decision", options[0] if options else {})
+        decision = result.get("decision")
+        return decision if decision is not None else (options[0] if options else {})
 
     def execute(
         self,
@@ -112,6 +128,8 @@ class AutonomousExecutor:
         constraints: dict[str, Any] | None,
     ) -> dict[str, Any]:
         """Run in automatic mode with strict phase separation."""
+        from cinder_cli.cli_responsive_progress import ResponsiveProgressDisplay
+        
         execution_flow = {
             "goal": goal,
             "phases": [],
@@ -119,44 +137,115 @@ class AutonomousExecutor:
         }
 
         try:
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=console,
-            ) as progress:
-                task = progress.add_task("[bold blue]PHASE 1: PLAN[/bold blue]", total=None)
-
-                plan_result = self._execute_plan_phase(goal, constraints, progress, task)
-                execution_flow["phases"].append(plan_result)
-
-                if not plan_result.get("success", False):
-                    return self._create_failure_result(goal, "Plan phase failed", execution_flow)
-
-                task = progress.add_task("[bold green]PHASE 2: GENERATION[/bold green]", total=None)
-                generation_results = self._execute_generation_phase(plan_result["plan"], progress, task)
-                execution_flow["phases"].extend(generation_results)
-
-                task = progress.add_task("[bold yellow]PHASE 3: EVALUATION[/bold yellow]", total=None)
-                evaluation_result = self._execute_evaluation_phase(generation_results, progress, task)
-                execution_flow["phases"].append(evaluation_result)
-
-                if not evaluation_result.get("all_approved", False):
-                    return self._create_failure_result(goal, "Evaluation phase failed", execution_flow)
-
-                task = progress.add_task("[bold magenta]PHASE 4: DECISION[/bold magenta]", total=None)
-                decision_result = self._execute_decision_phase(evaluation_result, progress, task)
-                execution_flow["phases"].append(decision_result)
-
-                execution_result = self._execute_files_creation(decision_result, progress)
-
+            self.time_recorder.start_execution()
+            self.speed_calculator.start()
+            
+            stats = self.execution_logger.get_execution_statistics()
+            self.estimation_engine.set_historical_stats(stats)
+            
+            progress_display = ResponsiveProgressDisplay(console)
+            progress_display.start("Initializing...")
+            
+            progress_display.update(10, "PHASE 1: PLAN - Understanding goal...")
+            self.time_recorder.start_phase("plan")
+            self.progress_tracker.start_phase(ExecutionPhase.PLAN)
+            
+            plan_result = self._execute_plan_phase(goal, constraints, None, None)
+            execution_flow["phases"].append(plan_result)
+            
+            self.time_recorder.end_phase("plan")
+            self.progress_tracker.complete_phase(ExecutionPhase.PLAN)
+            
+            if not plan_result.get("success", False):
+                progress_display.stop("Plan phase failed")
+                return self._create_failure_result(goal, "Plan phase failed", execution_flow)
+            
+            tasks_count = len(plan_result["plan"].get("subtasks", []))
+            self.progress_tracker.set_tasks_total(tasks_count)
+            estimate, confidence = self.estimation_engine.estimate_initial(tasks_count)
+            
+            progress_display.display_phase_summary(
+                "PLAN",
+                self.time_recorder.get_phase_timestamps().get("plan", {}).get("duration", 0),
+                tasks_count,
+                plan_result.get("quality_score", 0)
+            )
+            
+            progress_display.update(25, f"PHASE 2: GENERATION - Creating {tasks_count} tasks...")
+            self.time_recorder.start_phase("generation")
+            self.progress_tracker.start_phase(ExecutionPhase.GENERATION)
+            
+            generation_results = self._execute_generation_phase_with_progress(
+                plan_result["plan"], progress_display
+            )
+            execution_flow["phases"].extend(generation_results)
+            
+            self.time_recorder.end_phase("generation")
+            self.progress_tracker.complete_phase(ExecutionPhase.GENERATION)
+            
+            progress_display.display_phase_summary(
+                "GENERATION",
+                self.time_recorder.get_phase_timestamps().get("generation", {}).get("duration", 0),
+                len(generation_results)
+            )
+            
+            progress_display.update(60, "PHASE 3: EVALUATION - Reviewing code...")
+            self.time_recorder.start_phase("evaluation")
+            self.progress_tracker.start_phase(ExecutionPhase.EVALUATION)
+            
+            evaluation_result = self._execute_evaluation_phase(generation_results, None, None)
+            execution_flow["phases"].append(evaluation_result)
+            
+            self.time_recorder.end_phase("evaluation")
+            self.progress_tracker.complete_phase(ExecutionPhase.EVALUATION)
+            
+            if not evaluation_result.get("all_approved", False):
+                progress_display.stop("Evaluation phase failed")
+                return self._create_failure_result(goal, "Evaluation phase failed", execution_flow)
+            
+            progress_display.display_phase_summary(
+                "EVALUATION",
+                self.time_recorder.get_phase_timestamps().get("evaluation", {}).get("duration", 0),
+                len(evaluation_result.get("evaluations", []))
+            )
+            
+            progress_display.update(85, "PHASE 4: DECISION - Making decisions...")
+            self.time_recorder.start_phase("decision")
+            self.progress_tracker.start_phase(ExecutionPhase.DECISION)
+            
+            decision_result = self._execute_decision_phase(evaluation_result, None, None)
+            execution_flow["phases"].append(decision_result)
+            
+            self.time_recorder.end_phase("decision")
+            self.progress_tracker.complete_phase(ExecutionPhase.DECISION)
+            
+            progress_display.display_phase_summary(
+                "DECISION",
+                self.time_recorder.get_phase_timestamps().get("decision", {}).get("duration", 0)
+            )
+            
+            progress_display.update(95, "Creating files...")
+            execution_result = self._execute_files_creation(decision_result, None)
+            
+            self.time_recorder.end_execution()
+            progress_display.stop("Execution complete!")
+            
             execution_flow["status"] = "success"
-            console.print("\n[green]✓ 执行完成[/green]")
-
+            
+            speed_metrics = self.speed_calculator.get_speed_metrics()
+            phase_timestamps = self.time_recorder.get_phase_timestamps()
+            
+            console.print(f"\n[bold green]✓ 执行完成[/bold green]")
+            console.print(f"[dim]总耗时: {self.time_recorder.get_execution_duration():.1f}秒[/dim]")
+            console.print(f"[dim]速度: {speed_metrics['tasks_per_minute']:.1f} tasks/min[/dim]")
+            
             return {
                 "status": "success",
                 "goal": goal,
                 "execution_flow": execution_flow,
                 "results": execution_result,
+                "phase_timestamps": phase_timestamps,
+                "speed_metrics": speed_metrics,
             }
 
         except Exception as e:
@@ -174,11 +263,12 @@ class AutonomousExecutor:
         self,
         goal: str,
         constraints: dict[str, Any] | None,
-        progress: Progress,
-        task: Any,
+        progress: Progress | None,
+        task: Any | None,
     ) -> dict[str, Any]:
         """Execute Plan phase with validation."""
-        progress.update(task, description="[bold blue]PHASE 1: PLAN - Understanding goal...[/bold blue]")
+        if progress and task is not None:
+            progress.update(task, description="[bold blue]PHASE 1: PLAN - Understanding goal...[/bold blue]")
 
         plan = self.task_planner.decompose_goal_with_validation(
             goal,
@@ -190,7 +280,8 @@ class AutonomousExecutor:
         validation = plan.get("validation", {})
         quality_score = validation.get("quality_score", 0)
 
-        progress.update(task, description=f"[bold blue]PHASE 1: PLAN - Quality: {quality_score:.2f}[/bold blue]")
+        if progress and task is not None:
+            progress.update(task, description=f"[bold blue]PHASE 1: PLAN - Quality: {quality_score:.2f}[/bold blue]")
 
         if quality_score < 0.7:
             console.print(f"[yellow]⚠ Plan quality low: {quality_score:.2f}[/yellow]")
@@ -211,18 +302,19 @@ class AutonomousExecutor:
     def _execute_generation_phase(
         self,
         plan: dict[str, Any],
-        progress: Progress,
-        task: Any,
+        progress: Progress | None,
+        task: Any | None,
     ) -> list[dict[str, Any]]:
         """Execute Generation phase with iterations."""
         results = []
         subtasks = plan.get("subtasks", [])
 
         for i, subtask in enumerate(subtasks, 1):
-            progress.update(
-                task,
-                description=f"[bold green]PHASE 2: GENERATION - Task {i}/{len(subtasks)}[/bold green]"
-            )
+            if progress and task is not None:
+                progress.update(
+                    task,
+                    description=f"[bold green]PHASE 2: GENERATION - Task {i}/{len(subtasks)}[/bold green]"
+                )
 
             generation_result = self.code_generator.generate_with_iterations(
                 subtask["description"],
@@ -247,14 +339,56 @@ class AutonomousExecutor:
 
         return results
 
+    def _execute_generation_phase_with_progress(
+        self,
+        plan: dict[str, Any],
+        progress_display: Any,
+    ) -> list[dict[str, Any]]:
+        """Execute Generation phase with progress display."""
+        results = []
+        subtasks = plan.get("subtasks", [])
+        
+        for i, subtask in enumerate(subtasks, 1):
+            progress_display.update(
+                25 + (i / len(subtasks)) * 30,
+                f"PHASE 2: GENERATION - Task {i}/{len(subtasks)}"
+            )
+            
+            self.time_recorder.start_task(f"task_{i}", subtask["description"])
+            
+            generation_result = self.code_generator.generate_with_iterations(
+                subtask["description"],
+                subtask.get("language", "python"),
+                subtask.get("constraints"),
+                max_iterations=3,
+                quality_threshold=0.8,
+            )
+            
+            self.time_recorder.end_task(f"task_{i}")
+            self.speed_calculator.record_task_completed()
+            
+            results.append({
+                "phase": "generation",
+                "subtask_id": subtask.get("id"),
+                "subtask": subtask,
+                "code": generation_result.get("code"),
+                "iterations": generation_result.get("iterations", 1),
+                "quality_score": generation_result.get("final_score", 0),
+            })
+            
+            console.print(f"[dim]Task {i}: {generation_result.get('iterations', 1)} iterations, quality={generation_result.get('final_score', 0):.2f}[/dim]")
+        
+        return results
+
     def _execute_evaluation_phase(
         self,
         generation_results: list[dict[str, Any]],
-        progress: Progress,
-        task: Any,
+        progress: Progress | None,
+        task: Any | None,
     ) -> dict[str, Any]:
         """Execute Evaluation phase with comprehensive assessment."""
-        progress.update(task, description="[bold yellow]PHASE 3: EVALUATION - Assessing quality...[/bold yellow]")
+        if progress and task is not None:
+            progress.update(task, description="[bold yellow]PHASE 3: EVALUATION - Assessing quality...[/bold yellow]")
 
         evaluations = []
         all_approved = True
@@ -293,11 +427,12 @@ class AutonomousExecutor:
     def _execute_decision_phase(
         self,
         evaluation_result: dict[str, Any],
-        progress: Progress,
-        task: Any,
+        progress: Progress | None,
+        task: Any | None,
     ) -> dict[str, Any]:
         """Execute Decision phase based on Soul profile."""
-        progress.update(task, description="[bold magenta]PHASE 4: DECISION - Making decisions...[/bold magenta]")
+        if progress and task is not None:
+            progress.update(task, description="[bold magenta]PHASE 4: DECISION - Making decisions...[/bold magenta]")
 
         decisions = []
 

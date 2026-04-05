@@ -16,7 +16,7 @@ class DecisionDetector:
         if len(options) <= 1:
             return False
 
-        decision_keywords = ["选择", "决定", "应该", "还是", "或者"]
+        decision_keywords = ["选择", "决定", "应该", "还是", "或者", "处理", "如何", "是否", "接受", "拒绝", "修改"]
         if any(keyword in context for keyword in decision_keywords):
             return True
 

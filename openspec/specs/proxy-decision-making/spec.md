@@ -1,124 +1,124 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Detect decision points
-The system SHALL automatically detect when a decision requiring human input is needed during agent interactions.
+### 需求: 检测决策点
+系统应自动检测 agent 交互期间何时需要人工输入的决策。
 
-#### Scenario: Agent encounters ambiguous user request
-- **WHEN** agent receives a user request with multiple valid interpretations
-- **THEN** system identifies this as a decision point
-- **AND** system triggers the proxy decision mechanism
+#### 场景: Agent 遇到模糊的用户请求
+- **当** agent 收到具有多种有效解释的用户请求
+- **则** 系统将其识别为决策点
+- **且** 系统触发代理决策机制
 
-#### Scenario: Agent needs to choose between options
-- **WHEN** agent needs to choose between multiple action options
-- **THEN** system evaluates each option against soul preferences
-- **AND** system makes a decision or requests human confirmation based on risk level
+#### 场景: Agent 需要在选项之间选择
+- **当** agent 需要在多个行动选项之间选择
+- **则** 系统根据 soul 偏好评估每个选项
+- **且** 系统根据风险级别做出决策或请求人工确认
 
-### Requirement: Apply soul rules to decisions
-The system SHALL apply relevant soul rules when making proxy decisions.
+### 需求: 将 soul 规则应用于决策
+系统应在做出代理决策时应用相关的 soul 规则。
 
-#### Scenario: Apply risk tolerance rules
-- **WHEN** making a decision involving risk
-- **THEN** system checks the user's risk_tolerance trait
-- **AND** system applies the appropriate risk rule (conservative, balanced, or aggressive)
+#### 场景: 应用风险容忍度规则
+- **当** 做出涉及风险的决策
+- **则** 系统检查用户的 risk_tolerance 特质
+- **且** 系统应用适当的风险规则（保守、平衡或激进）
 
-#### Scenario: Apply communication preference rules
-- **WHEN** formatting a response or recommendation
-- **THEN** system checks the user's communication_preferences
-- **AND** system formats the output accordingly (structured, exploratory, or conclusion-first)
+#### 场景: 应用沟通偏好规则
+- **当** 格式化响应或建议
+- **则** 系统检查用户的 communication_preferences
+- **且** 系统相应地格式化输出（结构化、探索性或结论优先）
 
-#### Scenario: Apply decision boundary rules
-- **WHEN** making a decision that crosses a boundary threshold
-- **THEN** system checks the user's boundary_reminders
-- **AND** system either makes the decision or escalates to human based on boundary rules
+#### 场景: 应用决策边界规则
+- **当** 做出跨越边界阈值的决策
+- **则** 系统检查用户的 boundary_reminders
+- **且** 系统根据边界规则做出决策或升级给人工
 
-### Requirement: Decision confidence scoring
-The system SHALL calculate a confidence score for each proxy decision.
+### 需求: 决策置信度评分
+系统应为每个代理决策计算置信度分数。
 
-#### Scenario: High confidence decision
-- **WHEN** soul rules clearly indicate a preferred option
-- **THEN** system assigns a high confidence score (> 0.8)
-- **AND** system proceeds with the decision automatically
+#### 场景: 高置信度决策
+- **当** soul 规则明确指示首选选项
+- **则** 系统分配高置信度分数（> 0.8）
+- **且** 系统自动执行决策
 
-#### Scenario: Low confidence decision
-- **WHEN** soul rules are ambiguous or conflicting
-- **THEN** system assigns a low confidence score (< 0.5)
-- **AND** system requests human confirmation before proceeding
+#### 场景: 低置信度决策
+- **当** soul 规则模糊或冲突
+- **则** 系统分配低置信度分数（< 0.5）
+- **且** 系统在继续之前请求人工确认
 
-#### Scenario: Medium confidence decision
-- **WHEN** soul rules provide some guidance but not definitive
-- **THEN** system assigns a medium confidence score (0.5-0.8)
-- **AND** system makes the decision but logs it for review
+#### 场景: 中等置信度决策
+- **当** soul 规则提供一些指导但不明确
+- **则** 系统分配中等置信度分数（0.5-0.8）
+- **且** 系统做出决策但记录以供审查
 
-### Requirement: Human escalation
-The system SHALL escalate to human confirmation for high-stakes or uncertain decisions.
+### 需求: 人工升级
+系统应将高风险或不确定的决策升级为人工确认。
 
-#### Scenario: High-stakes decision
-- **WHEN** a decision involves significant financial, career, or relationship impact
-- **THEN** system identifies it as high-stakes
-- **AND** system requests human confirmation regardless of confidence score
+#### 场景: 高风险决策
+- **当** 决策涉及重大的财务、职业或关系影响
+- **则** 系统将其识别为高风险
+- **且** 系统无论置信度分数如何都请求人工确认
 
-#### Scenario: Decision outside soul scope
-- **WHEN** a decision involves a domain not covered by soul rules
-- **THEN** system identifies it as out-of-scope
-- **AND** system requests human input
+#### 场景: 决策超出 soul 范围
+- **当** 决策涉及 soul 规则未覆盖的领域
+- **则** 系统将其识别为超出范围
+- **且** 系统请求人工输入
 
-#### Scenario: User preference for manual confirmation
-- **WHEN** user has configured a preference for manual confirmation on certain decision types
-- **THEN** system respects the preference and requests confirmation
+#### 场景: 用户偏好手动确认
+- **当** 用户配置了某些决策类型的手动确认偏好
+- **则** 系统尊重该偏好并请求确认
 
-### Requirement: Explain decision rationale
-The system SHALL provide clear explanations for proxy decisions.
+### 需求: 解释决策理由
+系统应为代理决策提供清晰的解释。
 
-#### Scenario: User requests decision explanation
-- **WHEN** user asks why a decision was made
-- **THEN** system displays the soul rules that were applied
-- **AND** system shows the reasoning chain
+#### 场景: 用户请求决策解释
+- **当** 用户询问为何做出决策
+- **则** 系统显示应用的 soul 规则
+- **且** 系统显示推理链
 
-#### Scenario: Display decision context
-- **WHEN** displaying a proxy decision
-- **THEN** system shows the decision context (what was being decided)
-- **AND** system shows the options considered
-- **AND** system shows the selected option and confidence score
+#### 场景: 显示决策上下文
+- **当** 显示代理决策
+- **则** 系统显示决策上下文（正在决定什么）
+- **且** 系统显示考虑的选项
+- **且** 系统显示选定的选项和置信度分数
 
-### Requirement: Support multiple backends
-The system SHALL support proxy decision-making with both Ollama and Claude backends.
+### 需求: 支持多个后端
+系统应支持 Ollama 和 Claude 后端的代理决策。
 
-#### Scenario: Proxy decision with Ollama
-- **WHEN** using Ollama backend
-- **THEN** system applies soul rules to the model's decision-making process
-- **AND** system logs the decision
+#### 场景: 使用 Ollama 进行代理决策
+- **当** 使用 Ollama 后端
+- **则** 系统将 soul 规则应用于模型的决策过程
+- **且** 系统记录决策
 
-#### Scenario: Proxy decision with Claude
-- **WHEN** using Claude backend
-- **THEN** system applies soul rules to the model's decision-making process
-- **AND** system logs the decision
+#### 场景: 使用 Claude 进行代理决策
+- **当** 使用 Claude 后端
+- **则** 系统将 soul 规则应用于模型的决策过程
+- **且** 系统记录决策
 
-### Requirement: Custom decision rules
-The system SHALL allow users to define custom decision rules that override or supplement soul rules.
+### 需求: 自定义决策规则
+系统应允许用户定义覆盖或补充 soul 规则的自定义决策规则。
 
-#### Scenario: User defines custom rule
-- **WHEN** user adds a custom decision rule to soul.md
-- **THEN** system applies the custom rule with higher priority than inferred rules
+#### 场景: 用户定义自定义规则
+- **当** 用户向 soul.md 添加自定义决策规则
+- **则** 系统以比推断规则更高的优先级应用自定义规则
 
-#### Scenario: Custom rule conflicts with soul rule
-- **WHEN** a custom rule conflicts with an inferred soul rule
-- **THEN** system follows the custom rule
-- **AND** system logs the conflict
+#### 场景: 自定义规则与 soul 规则冲突
+- **当** 自定义规则与推断的 soul 规则冲突
+- **则** 系统遵循自定义规则
+- **且** 系统记录冲突
 
-### Requirement: Decision mode toggle
-The system SHALL allow users to toggle proxy decision mode on or off.
+### 需求: 决策模式切换
+系统应允许用户开启或关闭代理决策模式。
 
-#### Scenario: Enable proxy mode
-- **WHEN** user runs chat with --proxy flag
-- **THEN** system enables proxy decision-making
-- **AND** system makes decisions on behalf of the user when appropriate
+#### 场景: 启用代理模式
+- **当** 用户使用 --proxy 标志运行 chat
+- **则** 系统启用代理决策
+- **且** 系统在适当时代表用户做出决策
 
-#### Scenario: Disable proxy mode
-- **WHEN** user runs chat without --proxy flag
-- **THEN** system disables proxy decision-making
-- **AND** system always asks for user input when decisions are needed
+#### 场景: 禁用代理模式
+- **当** 用户不带 --proxy 标志运行 chat
+- **则** 系统禁用代理决策
+- **且** 系统在需要决策时始终询问用户输入
 
-#### Scenario: Interactive mode switching
-- **WHEN** user enters a command to toggle proxy mode during a session
-- **THEN** system switches the mode
-- **AND** system confirms the mode change
+#### 场景: 交互式模式切换
+- **当** 用户在会话期间输入切换代理模式的命令
+- **则** 系统切换模式
+- **且** 系统确认模式更改

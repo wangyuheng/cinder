@@ -1,110 +1,110 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Strict Phase Separation
-The system SHALL strictly separate execution into four sequential phases: Plan → Generation → Evaluation → Decision.
+### 需求: 严格的阶段分离
+系统应严格将执行分为四个顺序阶段：计划 → 生成 → 评估 → 决策。
 
-#### Scenario: Execute in correct order
-- **WHEN** a goal is submitted for execution
-- **THEN** system executes phases in strict order:
-  1. Plan phase (enhanced-task-planning)
-  2. Generation phase (iterative-code-generation)
-  3. Evaluation phase (comprehensive evaluation)
-  4. Decision phase (soul-based decision)
+#### 场景: 按正确顺序执行
+- **当** 提交目标进行执行
+- **则** 系统按严格顺序执行阶段：
+  1. 计划阶段 (enhanced-task-planning)
+  2. 生成阶段 (iterative-code-generation)
+  3. 评估阶段 (全面评估)
+  4. 决策阶段 (基于 soul 的决策)
 
-#### Scenario: No phase skipping
-- **WHEN** a phase is not complete
-- **THEN** system does not proceed to next phase
+#### 场景: 禁止跳过阶段
+- **当** 某个阶段未完成
+- **则** 系统不进入下一阶段
 
-#### Scenario: Phase completion verification
-- **WHEN** a phase completes
-- **THEN** system verifies phase completion criteria before proceeding
+#### 场景: 阶段完成验证
+- **当** 某个阶段完成
+- **则** 系统在继续之前验证阶段完成标准
 
-### Requirement: Evaluation Before Decision
-The system SHALL complete Evaluation phase and meet quality threshold before entering Decision phase.
+### 需求: 评估后决策
+系统应在进入决策阶段前完成评估阶段并满足质量阈值。
 
-#### Scenario: Evaluation passes quality threshold
-- **WHEN** Evaluation phase completes with quality score >= 0.7
-- **THEN** system proceeds to Decision phase
+#### 场景: 评估通过质量阈值
+- **当** 评估阶段完成且质量分数 >= 0.7
+- **则** 系统进入决策阶段
 
-#### Scenario: Evaluation fails quality threshold
-- **WHEN** Evaluation phase completes with quality score < 0.7
-- **THEN** system either:
-  - Returns to Generation phase for improvement
-  - Marks execution as failed
-  - Requests human intervention
+#### 场景: 评估未通过质量阈值
+- **当** 评估阶段完成但质量分数 < 0.7
+- **则** 系统选择以下之一：
+  - 返回生成阶段进行改进
+  - 将执行标记为失败
+  - 请求人工干预
 
-#### Scenario: No premature decision
-- **WHEN** Evaluation phase is not complete
-- **THEN** system does not make any decisions
+#### 场景: 禁止过早决策
+- **当** 评估阶段未完成
+- **则** 系统不做任何决策
 
-### Requirement: Comprehensive Evaluation
-The system SHALL perform comprehensive evaluation including code quality, Soul consistency, and risk assessment.
+### 需求: 全面评估
+系统应执行包括代码质量、Soul 一致性和风险评估的全面评估。
 
-#### Scenario: Code quality evaluation
-- **WHEN** code is ready for evaluation
-- **THEN** system evaluates:
-  - Syntax correctness
-  - Logic completeness
-  - Code style
-  - Documentation completeness
+#### 场景: 代码质量评估
+- **当** 代码准备好进行评估
+- **则** 系统评估：
+  - 语法正确性
+  - 逻辑完整性
+  - 代码风格
+  - 文档完整性
 
-#### Scenario: Soul consistency evaluation
-- **WHEN** code passes quality evaluation
-- **THEN** system checks Soul consistency:
-  - Risk tolerance alignment
-  - Structure preference alignment
-  - Detail orientation alignment
+#### 场景: Soul 一致性评估
+- **当** 代码通过质量评估
+- **则** 系统检查 Soul 一致性：
+  - 风险容忍度对齐
+  - 结构偏好对齐
+  - 细节导向对齐
 
-#### Scenario: Risk assessment
-- **WHEN** evaluation is performed
-- **THEN** system identifies and reports:
-  - Security risks
-  - Performance risks
-  - Maintainability risks
+#### 场景: 风险评估
+- **当** 执行评估
+- **则** 系统识别并报告：
+  - 安全风险
+  - 性能风险
+  - 可维护性风险
 
-### Requirement: Soul-Based Decision Making
-The system SHALL make decisions based on Soul profile only after Evaluation passes.
+### 需求: 基于 Soul 的决策制定
+系统应仅在评估通过后基于 Soul 配置文件做出决策。
 
-#### Scenario: Apply Soul rules
-- **WHEN** Evaluation phase passes
-- **THEN** system applies Soul rules to determine:
-  - Accept code
-  - Request modifications
-  - Reject code
+#### 场景: 应用 Soul 规则
+- **当** 评估阶段通过
+- **则** 系统应用 Soul 规则确定：
+  - 接受代码
+  - 请求修改
+  - 拒绝代码
 
-#### Scenario: Calculate decision confidence
-- **WHEN** making a decision
-- **THEN** system calculates confidence score based on:
-  - Evaluation quality score (50%)
-  - Soul alignment score (30%)
-  - Risk assessment score (20%)
+#### 场景: 计算决策置信度
+- **当** 做出决策
+- **则** 系统基于以下计算置信度分数：
+  - 评估质量分数 (50%)
+  - Soul 对齐分数 (30%)
+  - 风险评估分数 (20%)
 
-#### Scenario: High-confidence decision
-- **WHEN** decision confidence >= 0.8
-- **THEN** system proceeds autonomously
+#### 场景: 高置信度决策
+- **当** 决策置信度 >= 0.8
+- **则** 系统自主进行
 
-#### Scenario: Low-confidence decision
-- **WHEN** decision confidence < 0.6
-- **THEN** system either:
-  - Requests human confirmation
-  - Logs as requires review
-  - Applies conservative default
+#### 场景: 低置信度决策
+- **当** 决策置信度 < 0.6
+- **则** 系统选择以下之一：
+  - 请求人工确认
+  - 记录为需要审查
+  - 应用保守默认值
 
-### Requirement: Execution Flow Tracking
-The system SHALL track and log the complete execution flow for debugging and analysis.
+### 需求: 执行流程追踪
+系统应追踪并记录完整的执行流程以供调试和分析。
 
-#### Scenario: Log phase transitions
-- **WHEN** execution transitions between phases
-- **THEN** system logs:
-  - Phase name
-  - Timestamp
-  - Input/output summary
-  - Quality metrics
+#### 场景: 记录阶段转换
+- **当** 执行在阶段之间转换
+- **则** 系统记录：
+  - 阶段名称
+  - 时间戳
+  - 输入/输出摘要
+  - 质量指标
 
-#### Scenario: Log decision rationale
-- **WHEN** a decision is made
-- **THEN** system logs:
-  - Decision made
-  - Soul rules applied
-  - Confidence score
-  - Reasoning chain
+#### 场景: 记录决策理由
+- **当** 做出决策
+- **则** 系统记录：
+  - 做出的决策
+  - 应用的 Soul 规则
+  - 置信度分数
+  - 推理链

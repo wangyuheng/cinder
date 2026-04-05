@@ -1,87 +1,87 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Display generated soul profile
-The system SHALL display the generated soul profile in a clear and organized manner after generation.
+### 需求: 显示生成的 soul 画像
+系统应在生成后以清晰有序的方式显示生成的 soul 画像。
 
-#### Scenario: Display core traits
-- **WHEN** soul generation completes
-- **THEN** system displays the core traits section from soul.md
+#### 场景: 显示核心特质
+- **当** soul 生成完成
+- **则** 系统显示 soul.md 中的核心特质部分
 
-#### Scenario: Display decision profile
-- **WHEN** soul generation completes
-- **THEN** system displays the decision profile section showing how the user handles uncertainty, emotions, conflicts, risks, motivation, and energy
+#### 场景: 显示决策画像
+- **当** soul 生成完成
+- **则** 系统显示决策画像部分，展示用户如何处理不确定性、情绪、冲突、风险、动机和能量
 
-#### Scenario: Display agent behavior guidelines
-- **WHEN** soul generation completes
-- **THEN** system displays the agent behavior guidelines section
+#### 场景: 显示 agent 行为准则
+- **当** soul 生成完成
+- **则** 系统显示 agent 行为准则部分
 
-### Requirement: Explain soul dimensions
-The system SHALL provide explanations for each soul dimension in plain language.
+### 需求: 解释 soul 维度
+系统应以通俗语言为每个 soul 维度提供解释。
 
-#### Scenario: User requests explanation for a dimension
-- **WHEN** user selects a dimension for explanation
-- **THEN** system displays a plain-language explanation of what the dimension means
-- **AND** system shows how it affects agent behavior
+#### 场景: 用户请求维度解释
+- **当** 用户选择某个维度进行解释
+- **则** 系统显示该维度含义的通俗语言解释
+- **且** 系统展示它如何影响 agent 行为
 
-#### Scenario: Display all dimension explanations
-- **WHEN** user requests to see all explanations
-- **THEN** system displays explanations for all 6 dimensions (未知应对, 情绪调节, 冲突处理, 风险偏好, 能量恢复, 长期动力)
+#### 场景: 显示所有维度解释
+- **当** 用户请求查看所有解释
+- **则** 系统显示所有 6 个维度的解释（未知应对、情绪调节、冲突处理、风险偏好、能量恢复、长期动力）
 
-### Requirement: Allow soul adjustment
-The system SHALL allow users to adjust their soul profile if they feel it doesn't accurately reflect their preferences.
+### 需求: 允许 soul 调整
+系统应允许用户在感觉 soul 画像不能准确反映其偏好时进行调整。
 
-#### Scenario: User wants to reanswer a question
-- **WHEN** user selects the option to reanswer a question
-- **THEN** system displays the question again
-- **AND** system regenerates the soul profile with the new answer
+#### 场景: 用户想重新回答问题
+- **当** 用户选择重新回答问题的选项
+- **则** 系统再次显示该问题
+- **且** 系统使用新答案重新生成 soul 画像
 
-#### Scenario: User wants to adjust trait scores
-- **WHEN** user selects the option to manually adjust trait scores
-- **THEN** system displays current trait scores
-- **AND** system allows user to modify individual scores
-- **AND** system regenerates the soul profile with adjusted scores
+#### 场景: 用户想调整特质分数
+- **当** 用户选择手动调整特质分数的选项
+- **则** 系统显示当前特质分数
+- **且** 系统允许用户修改个别分数
+- **且** 系统使用调整后的分数重新生成 soul 画像
 
-#### Scenario: User wants to add custom rules
-- **WHEN** user selects the option to add custom decision rules
-- **THEN** system prompts user to input custom rules
-- **AND** system adds the custom rules to soul.md
+#### 场景: 用户想添加自定义规则
+- **当** 用户选择添加自定义决策规则的选项
+- **则** 系统提示用户输入自定义规则
+- **且** 系统将自定义规则添加到 soul.md
 
-### Requirement: Confirmation workflow
-The system SHALL require explicit user confirmation before finalizing the soul profile.
+### 需求: 确认工作流
+系统应在最终确定 soul 画像前要求用户明确确认。
 
-#### Scenario: User confirms soul profile
-- **WHEN** user reviews the soul profile and confirms it's accurate
-- **THEN** system saves the confirmed soul.md and soul.meta.yaml
-- **AND** system displays a success message
+#### 场景: 用户确认 soul 画像
+- **当** 用户审查 soul 画像并确认其准确
+- **则** 系统保存确认的 soul.md 和 soul.meta.yaml
+- **且** 系统显示成功消息
 
-#### Scenario: User rejects soul profile
-- **WHEN** user indicates the soul profile is not accurate
-- **THEN** system offers options to reanswer questions or adjust traits
-- **AND** system does not save the files until confirmation
+#### 场景: 用户拒绝 soul 画像
+- **当** 用户表示 soul 画像不准确
+- **则** 系统提供重新回答问题或调整特质的选项
+- **且** 系统在确认前不保存文件
 
-#### Scenario: Skip confirmation for quick mode
-- **WHEN** user runs with --skip-confirmation flag
-- **THEN** system saves the soul files without requiring explicit confirmation
+#### 场景: 快速模式跳过确认
+- **当** 用户使用 --skip-confirmation 标志运行
+- **则** 系统无需明确确认即保存 soul 文件
 
-### Requirement: Visual presentation
-The system SHALL present the soul profile in a visually appealing and easy-to-read format.
+### 需求: 视觉呈现
+系统应以视觉吸引且易于阅读的格式呈现 soul 画像。
 
-#### Scenario: Use syntax highlighting
-- **WHEN** displaying soul profile in terminal
-- **THEN** system uses colors and formatting to highlight key sections
+#### 场景: 使用语法高亮
+- **当** 在终端显示 soul 画像
+- **则** 系统使用颜色和格式突出关键部分
 
-#### Scenario: Paginate long content
-- **WHEN** soul profile content exceeds terminal height
-- **THEN** system paginates the content for easy reading
+#### 场景: 分页显示长内容
+- **当** soul 画像内容超过终端高度
+- **则** 系统分页显示内容以便阅读
 
-### Requirement: Save confirmation state
-The system SHALL track whether the soul profile has been confirmed by the user.
+### 需求: 保存确认状态
+系统应追踪 soul 画像是否已被用户确认。
 
-#### Scenario: Check confirmation status
-- **WHEN** system loads an existing soul.md
-- **THEN** system checks if it has been confirmed
-- **AND** system prompts for confirmation if not confirmed
+#### 场景: 检查确认状态
+- **当** 系统加载现有 soul.md
+- **则** 系统检查是否已确认
+- **且** 若未确认则提示确认
 
-#### Scenario: Mark soul as confirmed
-- **WHEN** user confirms the soul profile
-- **THEN** system adds a confirmation timestamp to soul.meta.yaml
+#### 场景: 标记 soul 为已确认
+- **当** 用户确认 soul 画像
+- **则** 系统在 soul.meta.yaml 中添加确认时间戳

@@ -1,150 +1,150 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Record decision metadata
-The system SHALL record comprehensive metadata for each proxy decision.
+### 需求: 记录决策元数据
+系统应为每个代理决策记录全面的元数据。
 
-#### Scenario: Record basic decision info
-- **WHEN** a proxy decision is made
-- **THEN** system records the decision timestamp, context, and outcome
+#### 场景: 记录基本决策信息
+- **当** 做出代理决策
+- **则** 系统记录决策时间戳、上下文和结果
 
-#### Scenario: Record soul rules applied
-- **WHEN** a proxy decision is made
-- **THEN** system records which soul rules were referenced
-- **AND** system records how each rule influenced the decision
+#### 场景: 记录应用的 soul 规则
+- **当** 做出代理决策
+- **则** 系统记录引用了哪些 soul 规则
+- **且** 系统记录每条规则如何影响决策
 
-#### Scenario: Record confidence score
-- **WHEN** a proxy decision is made
-- **THEN** system records the confidence score
-- **AND** system records whether human confirmation was required
+#### 场景: 记录置信度分数
+- **当** 做出代理决策
+- **则** 系统记录置信度分数
+- **且** 系统记录是否需要人工确认
 
-### Requirement: Store decision logs persistently
-The system SHALL store decision logs in a persistent SQLite database.
+### 需求: 持久化存储决策日志
+系统应在持久化 SQLite 数据库中存储决策日志。
 
-#### Scenario: Create database on first use
-- **WHEN** system makes the first proxy decision
-- **THEN** system creates the SQLite database at ~/.cinder/decisions.db
-- **AND** system creates the decisions table with proper schema
+#### 场景: 首次使用时创建数据库
+- **当** 系统做出第一个代理决策
+- **则** 系统在 ~/.cinder/decisions.db 创建 SQLite 数据库
+- **且** 系统使用正确的模式创建 decisions 表
 
-#### Scenario: Insert decision record
-- **WHEN** a proxy decision is made
-- **THEN** system inserts a new record into the decisions table
-- **AND** system confirms the insertion was successful
+#### 场景: 插入决策记录
+- **当** 做出代理决策
+- **则** 系统向 decisions 表插入新记录
+- **且** 系统确认插入成功
 
-#### Scenario: Handle database errors
-- **WHEN** database operation fails
-- **THEN** system logs the error
-- **AND** system continues operation without crashing
+#### 场景: 处理数据库错误
+- **当** 数据库操作失败
+- **则** 系统记录错误
+- **且** 系统继续运行而不崩溃
 
-### Requirement: Query decision history
-The system SHALL allow users to query and view decision history.
+### 需求: 查询决策历史
+系统应允许用户查询和查看决策历史。
 
-#### Scenario: List recent decisions
-- **WHEN** user runs the `decisions list` command
-- **THEN** system displays the most recent decisions (default: last 10)
-- **AND** system shows timestamp, context summary, and outcome for each
+#### 场景: 列出最近决策
+- **当** 用户运行 `decisions list` 命令
+- **则** 系统显示最近的决策（默认：最近 10 条）
+- **且** 系统显示每条的时间戳、上下文摘要和结果
 
-#### Scenario: Filter decisions by date range
-- **WHEN** user runs `decisions list --from DATE --to DATE`
-- **THEN** system displays decisions within the specified date range
+#### 场景: 按日期范围筛选决策
+- **当** 用户运行 `decisions list --from DATE --to DATE`
+- **则** 系统显示指定日期范围内的决策
 
-#### Scenario: Filter decisions by confidence
-- **WHEN** user runs `decisions list --min-confidence SCORE`
-- **THEN** system displays decisions with confidence score >= specified value
+#### 场景: 按置信度筛选决策
+- **当** 用户运行 `decisions list --min-confidence SCORE`
+- **则** 系统显示置信度分数 >= 指定值的决策
 
-#### Scenario: Search decisions by context
-- **WHEN** user runs `decisions search "keyword"`
-- **THEN** system displays decisions where context contains the keyword
+#### 场景: 按上下文搜索决策
+- **当** 用户运行 `decisions search "keyword"`
+- **则** 系统显示上下文包含关键词的决策
 
-### Requirement: Display decision details
-The system SHALL allow users to view detailed information about a specific decision.
+### 需求: 显示决策详情
+系统应允许用户查看特定决策的详细信息。
 
-#### Scenario: Show decision details
-- **WHEN** user runs `decisions show <decision-id>`
-- **THEN** system displays full decision details including context, soul rules, reasoning, and outcome
+#### 场景: 显示决策详情
+- **当** 用户运行 `decisions show <decision-id>`
+- **则** 系统显示完整的决策详情，包括上下文、soul 规则、推理和结果
 
-#### Scenario: Display decision reasoning chain
-- **WHEN** user views a decision with --reasoning flag
-- **THEN** system displays the step-by-step reasoning chain
+#### 场景: 显示决策推理链
+- **当** 用户使用 --reasoning 标志查看决策
+- **则** 系统显示逐步推理链
 
-#### Scenario: Export decision as JSON
-- **WHEN** user runs `decisions show <decision-id> --format json`
-- **THEN** system outputs the decision details in JSON format
+#### 场景: 以 JSON 导出决策
+- **当** 用户运行 `decisions show <decision-id> --format json`
+- **则** 系统以 JSON 格式输出决策详情
 
-### Requirement: Decision statistics
-The system SHALL provide statistics and insights about proxy decisions.
+### 需求: 决策统计
+系统应提供关于代理决策的统计和洞察。
 
-#### Scenario: Show decision summary
-- **WHEN** user runs `decisions stats`
-- **THEN** system displays total number of decisions
-- **AND** system displays average confidence score
-- **AND** system displays breakdown by decision type
+#### 场景: 显示决策摘要
+- **当** 用户运行 `decisions stats`
+- **则** 系统显示决策总数
+- **且** 系统显示平均置信度分数
+- **且** 系统显示按决策类型的分布
 
-#### Scenario: Show confidence distribution
-- **WHEN** user runs `decisions stats --confidence-distribution`
-- **THEN** system displays a histogram of confidence scores
+#### 场景: 显示置信度分布
+- **当** 用户运行 `decisions stats --confidence-distribution`
+- **则** 系统显示置信度分数的直方图
 
-#### Scenario: Show frequently applied rules
-- **WHEN** user runs `decisions stats --top-rules`
-- **THEN** system displays the most frequently applied soul rules
+#### 场景: 显示频繁应用的规则
+- **当** 用户运行 `decisions stats --top-rules`
+- **则** 系统显示最常应用的 soul 规则
 
-### Requirement: Export decision logs
-The system SHALL allow users to export decision logs for external analysis.
+### 需求: 导出决策日志
+系统应允许用户导出决策日志以供外部分析。
 
-#### Scenario: Export to CSV
-- **WHEN** user runs `decisions export --format csv --output decisions.csv`
-- **THEN** system exports all decision logs to a CSV file
+#### 场景: 导出为 CSV
+- **当** 用户运行 `decisions export --format csv --output decisions.csv`
+- **则** 系统将所有决策日志导出到 CSV 文件
 
-#### Scenario: Export to JSON
-- **WHEN** user runs `decisions export --format json --output decisions.json`
-- **THEN** system exports all decision logs to a JSON file
+#### 场景: 导出为 JSON
+- **当** 用户运行 `decisions export --format json --output decisions.json`
+- **则** 系统将所有决策日志导出到 JSON 文件
 
-#### Scenario: Export filtered decisions
-- **WHEN** user runs `decisions export --from DATE --to DATE --output filtered.csv`
-- **THEN** system exports only decisions within the specified date range
+#### 场景: 导出筛选的决策
+- **当** 用户运行 `decisions export --from DATE --to DATE --output filtered.csv`
+- **则** 系统仅导出指定日期范围内的决策
 
-### Requirement: Clean up old logs
-The system SHALL provide mechanisms to clean up old decision logs.
+### 需求: 清理旧日志
+系统应提供清理旧决策日志的机制。
 
-#### Scenario: Auto-archive old decisions
-- **WHEN** decision logs exceed configured age limit (default: 90 days)
-- **THEN** system automatically archives old logs to a separate file
+#### 场景: 自动归档旧决策
+- **当** 决策日志超过配置的年龄限制（默认：90 天）
+- **则** 系统自动将旧日志归档到单独文件
 
-#### Scenario: Manual cleanup
-- **WHEN** user runs `decisions clean --older-than DAYS`
-- **THEN** system deletes decisions older than specified days
-- **AND** system displays count of deleted records
+#### 场景: 手动清理
+- **当** 用户运行 `decisions clean --older-than DAYS`
+- **则** 系统删除超过指定天数的决策
+- **且** 系统显示删除的记录数
 
-#### Scenario: Archive before cleanup
-- **WHEN** user runs `decisions clean --archive`
-- **THEN** system archives old decisions to a timestamped file before deletion
+#### 场景: 清理前归档
+- **当** 用户运行 `decisions clean --archive`
+- **则** 系统在删除前将旧决策归档到带时间戳的文件
 
-### Requirement: Privacy and security
-The system SHALL protect sensitive information in decision logs.
+### 需求: 隐私和安全
+系统应保护决策日志中的敏感信息。
 
-#### Scenario: Redact sensitive data
-- **WHEN** logging a decision containing sensitive information (passwords, keys, personal data)
-- **THEN** system redacts or hashes the sensitive information
+#### 场景: 编辑敏感数据
+- **当** 记录包含敏感信息（密码、密钥、个人数据）的决策
+- **则** 系统编辑或哈希敏感信息
 
-#### Scenario: Encrypt database
-- **WHEN** user enables encryption with `config set encryption true`
-- **THEN** system encrypts the SQLite database
+#### 场景: 加密数据库
+- **当** 用户使用 `config set encryption true` 启用加密
+- **则** 系统加密 SQLite 数据库
 
-#### Scenario: User consent for logging
-- **WHEN** user runs chat with --no-logging flag
-- **THEN** system disables decision logging for that session
+#### 场景: 用户同意日志记录
+- **当** 用户使用 --no-logging 标志运行 chat
+- **则** 系统为该会话禁用决策日志
 
-### Requirement: Decision review workflow
-The system SHALL allow users to review and provide feedback on proxy decisions.
+### 需求: 决策审查工作流
+系统应允许用户审查代理决策并提供反馈。
 
-#### Scenario: Mark decision as correct
-- **WHEN** user runs `decisions review <decision-id> --correct`
-- **THEN** system marks the decision as validated by user
+#### 场景: 标记决策为正确
+- **当** 用户运行 `decisions review <decision-id> --correct`
+- **则** 系统将决策标记为用户验证
 
-#### Scenario: Mark decision as incorrect
-- **WHEN** user runs `decisions review <decision-id> --incorrect --reason "reason"`
-- **THEN** system marks the decision as incorrect
-- **AND** system stores the user's reason for future learning
+#### 场景: 标记决策为错误
+- **当** 用户运行 `decisions review <decision-id> --incorrect --reason "原因"`
+- **则** 系统将决策标记为错误
+- **且** 系统存储用户原因以供未来学习
 
-#### Scenario: View decisions needing review
-- **WHEN** user runs `decisions review --pending`
-- **THEN** system displays low-confidence decisions that haven't been reviewed
+#### 场景: 查看需要审查的决策
+- **当** 用户运行 `decisions review --pending`
+- **则** 系统显示尚未审查的低置信度决策

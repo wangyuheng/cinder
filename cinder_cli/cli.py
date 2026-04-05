@@ -532,6 +532,7 @@ def stats(ctx: click.Context) -> None:
     """Show execution statistics and analysis."""
     from rich.console import Console
     from rich.table import Table
+    from cinder_cli.executor import ExecutionLogger
     
     config: Config = ctx.obj["config"]
     logger = ExecutionLogger(config)

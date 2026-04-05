@@ -1,93 +1,93 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: Execute natural language goals
-The system SHALL accept natural language goals and execute them autonomously.
+### 需求: 执行自然语言目标
+系统应接受自然语言目标并自主执行。
 
-#### Scenario: Simple goal execution
-- **WHEN** user runs `cinder execute "创建一个 Python Hello World 程序"`
-- **THEN** system creates a Python file with Hello World code
-- **AND** system displays execution summary
+#### 场景: 简单目标执行
+- **当** 用户运行 `cinder execute "创建一个 Python Hello World 程序"`
+- **则** 系统创建包含 Hello World 代码的 Python 文件
+- **且** 系统显示执行摘要
 
-#### Scenario: Complex goal execution
-- **WHEN** user runs `cinder execute "做个记账web应用"`
-- **THEN** system decomposes the goal into subtasks
-- **AND** system executes each subtask sequentially
-- **AND** system creates all necessary files for a web application
+#### 场景: 复杂目标执行
+- **当** 用户运行 `cinder execute "做个记账web应用"`
+- **则** 系统将目标分解为子任务
+- **且** 系统按顺序执行每个子任务
+- **且** 系统创建 Web 应用所需的所有文件
 
-#### Scenario: Goal with constraints
-- **WHEN** user runs `cinder execute "创建API" --constraint "使用FastAPI"`
-- **THEN** system generates code using FastAPI framework
-- **AND** system respects the specified constraint
+#### 场景: 带约束的目标
+- **当** 用户运行 `cinder execute "创建API" --constraint "使用FastAPI"`
+- **则** 系统使用 FastAPI 框架生成代码
+- **且** 系统遵守指定的约束
 
-### Requirement: Coordinate execution components
-The system SHALL coordinate task planner, code generator, and file operations.
+### 需求: 协调执行组件
+系统应协调任务规划器、代码生成器和文件操作。
 
-#### Scenario: Successful coordination
-- **WHEN** execution starts
-- **THEN** system invokes task planner to decompose goal
-- **AND** system invokes code generator for each subtask
-- **AND** system invokes file operations to create files
-- **AND** system invokes reflection engine to evaluate results
+#### 场景: 成功协调
+- **当** 执行开始
+- **则** 系统调用任务规划器分解目标
+- **且** 系统为每个子任务调用代码生成器
+- **且** 系统调用文件操作创建文件
+- **且** 系统调用反思引擎评估结果
 
-#### Scenario: Component failure handling
-- **WHEN** a component fails during execution
-- **THEN** system logs the error
-- **AND** system attempts recovery or rollback
-- **AND** system notifies user of the failure
+#### 场景: 组件失败处理
+- **当** 执行期间组件失败
+- **则** 系统记录错误
+- **且** 系统尝试恢复或回滚
+- **且** 系统通知用户失败情况
 
-### Requirement: Provide execution progress feedback
-The system SHALL provide real-time progress feedback during execution.
+### 需求: 提供执行进度反馈
+系统应在执行期间提供实时进度反馈。
 
-#### Scenario: Progress display
-- **WHEN** execution is in progress
-- **THEN** system displays current task being executed
-- **AND** system shows overall progress percentage
-- **AND** system updates progress in real-time
+#### 场景: 进度显示
+- **当** 执行进行中
+- **则** 系统显示当前正在执行的任务
+- **且** 系统显示总体进度百分比
+- **且** 系统实时更新进度
 
-#### Scenario: Verbose mode
-- **WHEN** user runs `cinder execute "goal" --verbose`
-- **THEN** system displays detailed execution logs
-- **AND** system shows each decision made
-- **AND** system displays generated code previews
+#### 场景: 详细模式
+- **当** 用户运行 `cinder execute "goal" --verbose`
+- **则** 系统显示详细执行日志
+- **且** 系统显示每个做出的决策
+- **且** 系统显示生成的代码预览
 
-### Requirement: Support execution modes
-The system SHALL support different execution modes.
+### 需求: 支持执行模式
+系统应支持不同的执行模式。
 
-#### Scenario: Interactive mode
-- **WHEN** user runs `cinder execute "goal" --interactive`
-- **THEN** system prompts for confirmation before each major step
-- **AND** system allows user to modify decisions
-- **AND** system allows user to cancel execution
+#### 场景: 交互模式
+- **当** 用户运行 `cinder execute "goal" --interactive`
+- **则** 系统在每个主要步骤前提示确认
+- **且** 系统允许用户修改决策
+- **且** 系统允许用户取消执行
 
-#### Scenario: Dry-run mode
-- **WHEN** user runs `cinder execute "goal" --dry-run`
-- **THEN** system plans and displays what would be done
-- **AND** system does not create any files
-- **AND** system shows preview of generated code
+#### 场景: 预览模式
+- **当** 用户运行 `cinder execute "goal" --dry-run`
+- **则** 系统规划并显示将要执行的操作
+- **且** 系统不创建任何文件
+- **且** 系统显示生成代码的预览
 
-#### Scenario: Auto mode
-- **WHEN** user runs `cinder execute "goal" --auto`
-- **THEN** system executes without asking for confirmation
-- **AND** system makes all decisions autonomously
-- **AND** system creates files automatically
+#### 场景: 自动模式
+- **当** 用户运行 `cinder execute "goal" --auto`
+- **则** 系统无需确认即执行
+- **且** 系统自主做出所有决策
+- **且** 系统自动创建文件
 
-### Requirement: Handle execution errors
-The system SHALL handle errors gracefully during execution.
+### 需求: 处理执行错误
+系统应在执行期间优雅地处理错误。
 
-#### Scenario: Code generation error
-- **WHEN** code generation fails
-- **THEN** system logs the error with details
-- **AND** system attempts to regenerate with different approach
-- **AND** system notifies user if all attempts fail
+#### 场景: 代码生成错误
+- **当** 代码生成失败
+- **则** 系统记录详细错误
+- **且** 系统尝试以不同方法重新生成
+- **且** 系统在所有尝试失败时通知用户
 
-#### Scenario: File operation error
-- **WHEN** file creation fails due to permissions
-- **THEN** system displays clear error message
-- **AND** system suggests solutions
-- **AND** system offers to retry with different location
+#### 场景: 文件操作错误
+- **当** 因权限问题导致文件创建失败
+- **则** 系统显示清晰的错误消息
+- **且** 系统建议解决方案
+- **且** 系统提供在不同位置重试的选项
 
-#### Scenario: Partial execution rollback
-- **WHEN** execution fails after some files are created
-- **THEN** system offers to rollback created files
-- **AND** system preserves execution log for debugging
-- **AND** system allows user to resume from failure point
+#### 场景: 部分执行回滚
+- **当** 创建部分文件后执行失败
+- **则** 系统提供回滚已创建文件的选项
+- **且** 系统保留执行日志以供调试
+- **且** 系统允许用户从失败点恢复

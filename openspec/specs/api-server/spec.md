@@ -1,79 +1,79 @@
-## ADDED Requirements
+## 新增需求
 
-### Requirement: API Server Startup
-The system SHALL provide a FastAPI-based API server that can be started via CLI.
+### 需求: API 服务器启动
+系统应提供可通过 CLI 启动的 FastAPI API 服务器。
 
-#### Scenario: Start server via CLI
-- **WHEN** user runs `cinder server`
-- **THEN** system starts the API server on the configured port (default 8000)
+#### 场景: 通过 CLI 启动服务器
+- **当** 用户运行 `cinder server`
+- **则** 系统在配置的端口（默认 8000）上启动 API 服务器
 
-#### Scenario: Server with custom port
-- **WHEN** user runs `cinder server --port 9000`
-- **THEN** system starts the API server on port 9000
+#### 场景: 使用自定义端口启动服务器
+- **当** 用户运行 `cinder server --port 9000`
+- **则** 系统在端口 9000 上启动 API 服务器
 
-### Requirement: Executions API
-The system SHALL provide REST API endpoints for execution management.
+### 需求: 执行 API
+系统应提供用于执行管理的 REST API 端点。
 
-#### Scenario: List executions
-- **WHEN** client requests GET /api/executions
-- **THEN** system returns a paginated list of executions
+#### 场景: 列出执行
+- **当** 客户端请求 GET /api/executions
+- **则** 系统返回分页的执行列表
 
-#### Scenario: Get execution details
-- **WHEN** client requests GET /api/executions/{id}
-- **THEN** system returns detailed execution information
+#### 场景: 获取执行详情
+- **当** 客户端请求 GET /api/executions/{id}
+- **则** 系统返回详细的执行信息
 
-#### Scenario: Create execution
-- **WHEN** client posts to POST /api/executions with goal and mode
-- **THEN** system creates a new execution and returns execution ID
+#### 场景: 创建执行
+- **当** 客户端向 POST /api/executions 发送目标和模式
+- **则** 系统创建新执行并返回执行 ID
 
-#### Scenario: Get execution statistics
-- **WHEN** client requests GET /api/executions/stats
-- **THEN** system returns aggregated statistics (total, success rate, etc.)
+#### 场景: 获取执行统计
+- **当** 客户端请求 GET /api/executions/stats
+- **则** 系统返回聚合统计（总数、成功率等）
 
-### Requirement: Soul Configuration API
-The system SHALL provide REST API endpoints for Soul configuration management.
+### 需求: Soul 配置 API
+系统应提供用于 Soul 配置管理的 REST API 端点。
 
-#### Scenario: Get Soul configuration
-- **WHEN** client requests GET /api/soul
-- **THEN** system returns current Soul profile and traits
+#### 场景: 获取 Soul 配置
+- **当** 客户端请求 GET /api/soul
+- **则** 系统返回当前 Soul 画像和特质
 
-#### Scenario: Update Soul configuration
-- **WHEN** client sends PUT /api/soul with updated traits
-- **THEN** system updates the Soul configuration file
+#### 场景: 更新 Soul 配置
+- **当** 客户端发送 PUT /api/soul 及更新的特质
+- **则** 系统更新 Soul 配置文件
 
-### Requirement: Decisions API
-The system SHALL provide REST API endpoints for decision history.
+### 需求: 决策 API
+系统应提供用于决策历史的 REST API 端点。
 
-#### Scenario: List decisions
-- **WHEN** client requests GET /api/decisions
-- **THEN** system returns a paginated list of decisions
+#### 场景: 列出决策
+- **当** 客户端请求 GET /api/decisions
+- **则** 系统返回分页的决策列表
 
-#### Scenario: Get decision details
-- **WHEN** client requests GET /api/decisions/{id}
-- **THEN** system returns detailed decision information
+#### 场景: 获取决策详情
+- **当** 客户端请求 GET /api/decisions/{id}
+- **则** 系统返回详细的决策信息
 
-#### Scenario: Get decision statistics
-- **WHEN** client requests GET /api/decisions/stats
-- **THEN** system returns aggregated decision statistics
+#### 场景: 获取决策统计
+- **当** 客户端请求 GET /api/decisions/stats
+- **则** 系统返回聚合的决策统计
 
-### Requirement: CORS Configuration
-The system SHALL configure CORS to allow frontend access.
+### 需求: CORS 配置
+系统应配置 CORS 以允许前端访问。
 
-#### Scenario: CORS headers present
-- **WHEN** frontend makes cross-origin request
-- **THEN** system includes appropriate CORS headers in response
+#### 场景: CORS 头存在
+- **当** 前端发起跨域请求
+- **则** 系统在响应中包含适当的 CORS 头
 
-### Requirement: Error Handling
-The system SHALL return appropriate HTTP error codes and messages.
+### 需求: 错误处理
+系统应返回适当的 HTTP 错误代码和消息。
 
-#### Scenario: Resource not found
-- **WHEN** client requests non-existent resource
-- **THEN** system returns 404 status with error message
+#### 场景: 资源未找到
+- **当** 客户端请求不存在的资源
+- **则** 系统返回 404 状态和错误消息
 
-#### Scenario: Invalid request
-- **WHEN** client sends malformed request
-- **THEN** system returns 400 status with validation errors
+#### 场景: 无效请求
+- **当** 客户端发送格式错误的请求
+- **则** 系统返回 400 状态和验证错误
 
-#### Scenario: Server error
-- **WHEN** unexpected error occurs
-- **THEN** system returns 500 status with generic error message
+#### 场景: 服务器错误
+- **当** 发生意外错误
+- **则** 系统返回 500 状态和通用错误消息

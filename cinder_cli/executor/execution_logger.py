@@ -25,7 +25,11 @@ class ExecutionLogger:
         results TEXT,
         status TEXT NOT NULL,
         created_files TEXT,
-        execution_time REAL
+        execution_time REAL,
+        phase_timestamps TEXT,
+        progress_data TEXT,
+        speed_metrics TEXT,
+        estimation_data TEXT
     );
 
     CREATE INDEX IF NOT EXISTS idx_timestamp ON executions(timestamp);
@@ -42,6 +46,10 @@ class ExecutionLogger:
         goal: str,
         task_tree: dict[str, Any],
         results: list[dict[str, Any]],
+        phase_timestamps: dict[str, Any] | None = None,
+        progress_data: dict[str, Any] | None = None,
+        speed_metrics: dict[str, Any] | None = None,
+        estimation_data: dict[str, Any] | None = None,
     ) -> int:
         """
         Log an execution.
@@ -50,6 +58,10 @@ class ExecutionLogger:
             goal: Execution goal
             task_tree: Task tree
             results: Execution results
+            phase_timestamps: Phase-level timestamps
+            progress_data: Progress tracking data
+            speed_metrics: Speed metrics
+            estimation_data: Estimation data
 
         Returns:
             Execution ID
@@ -58,8 +70,9 @@ class ExecutionLogger:
             cursor = conn.execute(
                 """
                 INSERT INTO executions
-                (timestamp, goal, task_tree, results, status, created_files)
-                VALUES (?, ?, ?, ?, ?, ?)
+                (timestamp, goal, task_tree, results, status, created_files,
+                 phase_timestamps, progress_data, speed_metrics, estimation_data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     datetime.now().isoformat(),
@@ -71,6 +84,10 @@ class ExecutionLogger:
                         [r["file_result"]["file_path"] for r in results if "file_result" in r],
                         ensure_ascii=False,
                     ),
+                    json.dumps(phase_timestamps, ensure_ascii=False) if phase_timestamps else None,
+                    json.dumps(progress_data, ensure_ascii=False) if progress_data else None,
+                    json.dumps(speed_metrics, ensure_ascii=False) if speed_metrics else None,
+                    json.dumps(estimation_data, ensure_ascii=False) if estimation_data else None,
                 ),
             )
             conn.commit()
@@ -150,6 +167,10 @@ class ExecutionLogger:
             "status": row["status"],
             "created_files": json.loads(row["created_files"]) if row["created_files"] else [],
             "execution_time": row["execution_time"],
+            "phase_timestamps": json.loads(row["phase_timestamps"]) if row["phase_timestamps"] else None,
+            "progress_data": json.loads(row["progress_data"]) if row["progress_data"] else None,
+            "speed_metrics": json.loads(row["speed_metrics"]) if row["speed_metrics"] else None,
+            "estimation_data": json.loads(row["estimation_data"]) if row["estimation_data"] else None,
         }
 
     def generate_report(
@@ -360,4 +381,109 @@ class ExecutionLogger:
             "file_types": top_file_types,
             "hourly_distribution": hourly_distribution,
             "insights": insights,
+        }
+
+    def update_progress(
+        self,
+        execution_id: int,
+        progress_data: dict[str, Any],
+    ) -> None:
+        """
+        Update progress data for an execution.
+
+        Args:
+            execution_id: Execution ID
+            progress_data: Progress data to update
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                """
+                UPDATE executions
+                SET progress_data = ?
+                WHERE id = ?
+                """,
+                (json.dumps(progress_data, ensure_ascii=False), execution_id),
+            )
+            conn.commit()
+
+    def update_speed_metrics(
+        self,
+        execution_id: int,
+        speed_metrics: dict[str, Any],
+    ) -> None:
+        """
+        Update speed metrics for an execution.
+
+        Args:
+            execution_id: Execution ID
+            speed_metrics: Speed metrics to update
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                """
+                UPDATE executions
+                SET speed_metrics = ?
+                WHERE id = ?
+                """,
+                (json.dumps(speed_metrics, ensure_ascii=False), execution_id),
+            )
+            conn.commit()
+
+    def get_execution_statistics(
+        self,
+        limit: int = 100,
+    ) -> dict[str, Any]:
+        """
+        Get execution statistics for estimation.
+
+        Args:
+            limit: Maximum number of executions to analyze
+
+        Returns:
+            Execution statistics
+        """
+        executions = self.list_executions(limit=limit)
+        
+        if not executions:
+            return {
+                "total": 0,
+                "avg_execution_time": 0,
+                "avg_tasks_count": 0,
+                "phase_statistics": {},
+            }
+        
+        total_time = 0
+        total_tasks = 0
+        phase_times = {}
+        
+        for ex in executions:
+            if ex.get("execution_time"):
+                total_time += ex["execution_time"]
+            
+            if ex.get("task_tree"):
+                tasks = ex["task_tree"].get("subtasks", [])
+                total_tasks += len(tasks)
+            
+            if ex.get("phase_timestamps"):
+                for phase, data in ex["phase_timestamps"].items():
+                    if phase not in phase_times:
+                        phase_times[phase] = []
+                    if data.get("duration"):
+                        phase_times[phase].append(data["duration"])
+        
+        phase_statistics = {}
+        for phase, times in phase_times.items():
+            if times:
+                phase_statistics[phase] = {
+                    "avg_duration": sum(times) / len(times),
+                    "min_duration": min(times),
+                    "max_duration": max(times),
+                    "count": len(times),
+                }
+        
+        return {
+            "total": len(executions),
+            "avg_execution_time": total_time / len(executions) if executions else 0,
+            "avg_tasks_count": total_tasks / len(executions) if executions else 0,
+            "phase_statistics": phase_statistics,
         }
