@@ -5,6 +5,62 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## \[3.1.0] - 2026-04-05
+
+### 新增
+
+#### Codex 集成
+
+- **CodexExecExecutor**: 使用 Codex CLI 的非交互模式执行任务
+  - 支持所有 Codex CLI 参数（--json, --sandbox, --output-schema 等）
+  - JSONL 输出解析
+  - 超时控制和进程管理
+  - 沙箱模式和审批策略支持
+- **CodexIntegrationManager**: Codex 集成管理器
+  - 执行器选择逻辑
+  - Soul profile 上下文传递
+  - 决策上下文传递
+  - 降级机制（fallback to CodeGenerator）
+  - 配置管理和验证
+- **Worker Agent 集成**: 无缝集成 Codex 到 Worker Agent
+  - 自动执行器选择
+  - 上下文传递
+  - 错误降级
+  - 向后兼容
+- **配置系统**: 完整的 Codex 配置支持
+  - 启用/禁用开关
+  - 执行器选择
+  - 模型配置
+  - 沙箱设置
+  - 审批策略
+- **错误处理**: 完善的异常处理
+  - CodexNotInstalledError
+  - CodexTimeoutError
+  - CodexExecutionError
+  - CodexOutputError
+  - CodexAuthenticationError
+  - CodexConfigurationError
+- **工具函数**: Codex CLI 工具集
+  - is_codex_installed(): 检查 Codex CLI 是否安装
+  - get_codex_version(): 获取 Codex 版本
+  - check_codex_availability(): 检查可用性
+  - validate_codex_authentication(): 验证认证
+- **测试**: 完整的单元测试
+  - CodexExecutor 测试（12 个测试）
+  - CodexIntegrationManager 测试（7 个测试）
+- **文档**: 完整的用户文档
+  - 安装指南
+  - 配置说明
+  - 使用示例
+  - 故障排除
+  - 最佳实践
+
+### 改进
+
+- Worker Agent 支持多种执行器（CodeGenerator 和 Codex）
+- 配置系统支持 Codex 相关配置
+- 错误处理更加健壮
+
 ## \[3.0.0] - 2026-04-06
 
 ### 新增

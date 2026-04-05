@@ -22,6 +22,11 @@ from cinder_cli.executor.task_planner import TaskPlanner
 from cinder_cli.executor.code_generator import CodeGenerator
 from cinder_cli.executor.reflection_engine import ReflectionEngine
 from cinder_cli.executor.token_tracker import TokenTracker
+from cinder_cli.executor.codex_integration_manager import (
+    CodexIntegrationManager,
+    TaskContext,
+)
+from cinder_cli.executor.codex_exceptions import CodexError
 
 
 @dataclass
@@ -73,6 +78,14 @@ class WorkerAgent(BaseAgent):
         self.planner = TaskPlanner(config, self.token_tracker)
         self.generator = CodeGenerator(config, self.token_tracker)
         self.evaluator = ReflectionEngine(config)
+        
+        self.codex_manager: CodexIntegrationManager | None = None
+        if config.is_codex_enabled():
+            try:
+                self.codex_manager = CodexIntegrationManager(config)
+            except CodexError as e:
+                import logging
+                logging.warning(f"Failed to initialize Codex: {e}")
         
         self.current_task: Task | None = None
         self.execution_history: list[WorkerOutput] = []
@@ -242,6 +255,84 @@ class WorkerAgent(BaseAgent):
                 "code": "",
             }
         
+        if self._should_use_codex(task):
+            return self._generate_with_codex(subtasks, task)
+        else:
+            return self._generate_with_code_generator(subtasks)
+    
+    def _should_use_codex(self, task: Task) -> bool:
+        """Determine if Codex should be used for this task."""
+        if not self.codex_manager or not self.codex_manager.is_available():
+            return False
+        
+        return self.config.is_codex_enabled()
+    
+    def _generate_with_codex(
+        self,
+        subtasks: list[dict[str, Any]],
+        task: Task,
+    ) -> dict[str, Any]:
+        """Generate code using Codex."""
+        code_parts = []
+        
+        soul_meta = task.metadata.get("soul_meta", {})
+        decision_context = task.metadata.get("decision_context", {})
+        
+        for subtask in subtasks:
+            context = TaskContext(
+                soul_profile=soul_meta,
+                decision_context=decision_context,
+                quality_requirements={
+                    "quality_threshold": 0.8,
+                }
+            )
+            
+            try:
+                result = self.codex_manager.execute_task(
+                    subtask.get("description", ""),
+                    context,
+                    cwd=task.metadata.get("cwd"),
+                )
+                
+                if result.success:
+                    code_parts.append(result.output)
+                else:
+                    import logging
+                    logging.warning(f"Codex execution failed: {result.error}")
+                    fallback_result = self.generator.generate_with_iterations(
+                        subtask.get("description", ""),
+                        subtask.get("language", "python"),
+                        subtask.get("constraints"),
+                        max_iterations=3,
+                        quality_threshold=0.8,
+                    )
+                    code_parts.append(fallback_result.get("code", ""))
+                    
+            except CodexError as e:
+                import logging
+                logging.warning(f"Codex error, falling back to CodeGenerator: {e}")
+                
+                fallback_result = self.generator.generate_with_iterations(
+                    subtask.get("description", ""),
+                    subtask.get("language", "python"),
+                    subtask.get("constraints"),
+                    max_iterations=3,
+                    quality_threshold=0.8,
+                )
+                code_parts.append(fallback_result.get("code", ""))
+        
+        return {
+            "type": "code",
+            "code": "\n\n".join(code_parts),
+            "iterations": len(subtasks),
+            "executor": "codex",
+        }
+    
+    def _generate_with_code_generator(
+        self,
+        subtasks: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Generate code using CodeGenerator."""
         code_parts = []
         
         for subtask in subtasks:
@@ -259,6 +350,7 @@ class WorkerAgent(BaseAgent):
             "type": "code",
             "code": "\n\n".join(code_parts),
             "iterations": len(subtasks),
+            "executor": "code_generator",
         }
     
     def _evaluate(

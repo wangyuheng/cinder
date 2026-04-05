@@ -93,3 +93,5 @@ Thumbs.db
 *.tmp
 *.bak
 *.log
+
+.refs/

@@ -43,6 +43,19 @@ class Config:
         "enable_iterative_generation": True,
         "enable_plan_validation": True,
         "enable_comprehensive_evaluation": True,
+        "codex_integration": {
+            "enabled": False,
+            "fallback_on_error": True,
+            "default_executor": "exec",
+            "exec": {
+                "model": "gpt-5.4",
+                "sandbox_mode": "workspace-write",
+                "approval_policy": "never",
+                "skip_git_repo_check": True,
+                "ephemeral": True,
+                "timeout": 300,
+            },
+        },
     }
 
     def __init__(self, config_dir: Path | None = None):
@@ -125,3 +138,48 @@ class Config:
     def all(self) -> dict[str, Any]:
         """Get all configuration values."""
         return self._config.copy()
+
+    @property
+    def codex(self) -> dict[str, Any]:
+        """Get Codex integration configuration."""
+        return self._config.get("codex_integration", self.DEFAULT_CONFIG["codex_integration"])
+
+    def is_codex_enabled(self) -> bool:
+        """Check if Codex integration is enabled."""
+        return self.codex.get("enabled", False)
+
+    def validate_codex_config(self) -> list[str]:
+        """
+        Validate Codex configuration.
+        
+        Returns:
+            List of validation error messages. Empty list if valid.
+        """
+        errors = []
+        codex_config = self.codex
+        
+        if not codex_config.get("enabled", False):
+            return errors
+        
+        default_executor = codex_config.get("default_executor", "exec")
+        valid_executors = ["exec", "app_server", "mcp"]
+        if default_executor not in valid_executors:
+            errors.append(f"Invalid default_executor '{default_executor}'. Must be one of {valid_executors}")
+        
+        exec_config = codex_config.get("exec", {})
+        
+        valid_sandbox_modes = ["read-only", "workspace-write", "danger-full-access"]
+        sandbox_mode = exec_config.get("sandbox_mode", "workspace-write")
+        if sandbox_mode not in valid_sandbox_modes:
+            errors.append(f"Invalid sandbox_mode '{sandbox_mode}'. Must be one of {valid_sandbox_modes}")
+        
+        valid_approval_policies = ["never", "on-request", "on-failure", "untrusted"]
+        approval_policy = exec_config.get("approval_policy", "never")
+        if approval_policy not in valid_approval_policies:
+            errors.append(f"Invalid approval_policy '{approval_policy}'. Must be one of {valid_approval_policies}")
+        
+        timeout = exec_config.get("timeout", 300)
+        if not isinstance(timeout, (int, float)) or timeout <= 0:
+            errors.append(f"Invalid timeout '{timeout}'. Must be a positive number")
+        
+        return errors

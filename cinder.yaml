@@ -25,3 +25,17 @@ evaluation_quality_threshold: 0.7
 enable_iterative_generation: true
 enable_plan_validation: true
 enable_comprehensive_evaluation: true
+
+codex_integration:
+  enabled: true
+  fallback_on_error: true
+  default_executor: "exec"
+  
+  exec:
+    model: "gpt-5.4"
+    sandbox_mode: "danger-full-access"
+    approval_policy: "never"
+    skip_git_repo_check: true
+    ephemeral: true
+    timeout: 300
+    full_auto: true
