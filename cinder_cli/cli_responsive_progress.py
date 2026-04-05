@@ -86,6 +86,8 @@ class ResponsiveProgressDisplay:
             TimeElapsedColumn(),
             TimeRemainingColumn(),
             TextColumn("[cyan]{task.fields[speed]:.1f} tasks/min"),
+            TextColumn("[blue]in:{task.fields[input_tokens]}[/blue] [green]out:{task.fields[output_tokens]}[/green]"),
+            TextColumn("[magenta]{task.fields[token_speed]:.1f} tok/s"),
             console=self.console,
         )
 
@@ -102,6 +104,9 @@ class ResponsiveProgressDisplay:
             description,
             total=100,
             speed=0.0,
+            input_tokens=0,
+            output_tokens=0,
+            token_speed=0.0,
         )
         # Refresh to ensure task is created
         self._progress.refresh()
@@ -111,6 +116,9 @@ class ResponsiveProgressDisplay:
         progress: float,
         description: str | None = None,
         speed: float = 0.0,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
+        token_speed: float = 0.0,
     ) -> None:
         """
         Update progress display.
@@ -119,6 +127,9 @@ class ResponsiveProgressDisplay:
             progress: Progress percentage (0-100)
             description: Updated description (optional)
             speed: Current speed in tasks/min
+            input_tokens: Total input tokens used
+            output_tokens: Total output tokens used
+            token_speed: Token generation speed in tokens/min
         """
         if self._progress and self._task_id is not None:
             update_kwargs = {"completed": progress}
@@ -131,6 +142,9 @@ class ResponsiveProgressDisplay:
             
             if not self._is_compact_mode():
                 update_kwargs["speed"] = speed
+                update_kwargs["input_tokens"] = input_tokens
+                update_kwargs["output_tokens"] = output_tokens
+                update_kwargs["token_speed"] = token_speed
             
             self._progress.update(self._task_id, **update_kwargs)
 

@@ -40,6 +40,8 @@ class CLIProgressDisplay:
             TimeElapsedColumn(),
             TimeRemainingColumn(),
             TextColumn("[cyan]{task.fields[speed]:.1f} tasks/min"),
+            TextColumn("[blue]in:{task.fields[input_tokens]}[/blue] [green]out:{task.fields[output_tokens]}[/green]"),
+            TextColumn("[magenta]{task.fields[token_speed]:.1f} tok/s"),
             console=self.console,
         )
 
@@ -56,6 +58,9 @@ class CLIProgressDisplay:
             description,
             total=100,
             speed=0.0,
+            input_tokens=0,
+            output_tokens=0,
+            token_speed=0.0,
         )
 
     def update(
@@ -63,6 +68,9 @@ class CLIProgressDisplay:
         progress: float,
         description: str | None = None,
         speed: float = 0.0,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
+        token_speed: float = 0.0,
     ) -> None:
         """
         Update progress display.
@@ -71,11 +79,17 @@ class CLIProgressDisplay:
             progress: Progress percentage (0-100)
             description: Updated description (optional)
             speed: Current speed in tasks/min
+            input_tokens: Total input tokens used
+            output_tokens: Total output tokens used
+            token_speed: Token generation speed in tokens/min
         """
         if self._progress and self._task_id is not None:
             update_kwargs = {
                 "completed": progress,
                 "speed": speed,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "token_speed": token_speed,
             }
             if description:
                 update_kwargs["description"] = description

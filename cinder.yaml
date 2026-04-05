@@ -1,0 +1,27 @@
+backend: ollama
+model: minimax-m2.7:cloud
+
+ollama_base_url: "http://localhost:11434"
+ollama_keep_alive: "10m"
+ollama_stream: true
+ollama_debug: true
+
+temperature: 0.2
+
+soul_path: soul.md
+meta_path: ""
+
+proxy_mode: false
+decision_logging: true
+
+reflection_loop: false
+max_iterations: 3
+sleep_seconds: 1.0
+
+plan_quality_threshold: 0.7
+code_quality_threshold: 0.8
+evaluation_quality_threshold: 0.7
+
+enable_iterative_generation: true
+enable_plan_validation: true
+enable_comprehensive_evaluation: true

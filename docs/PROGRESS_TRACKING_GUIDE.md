@@ -33,6 +33,10 @@ You'll see enhanced progress display:
 - **Progress Bar**: Visual representation of completion percentage
 - **⏱ Time**: Elapsed time / Estimated remaining time
 - **🚀 Speed**: Current execution speed in tasks per minute
+- **📊 Tokens**: Input and output token usage
+  - **in:X**: Input tokens (prompt tokens consumed)
+  - **out:Y**: Output tokens (completion tokens generated)
+  - **Z.Z tok/s**: Token generation speed (tokens per second)
 - **Phase Indicators**: 
   - ✓ Completed phases
   - ⏳ Active phase
@@ -154,7 +158,37 @@ cinder config set time_estimation true
 
 # Set historical data retention (days)
 cinder config set data_retention_days 30
+
+# Enable/disable Ollama debug output (shows token details)
+cinder config set ollama_debug true
 ```
+
+### Token Tracking
+
+Token tracking provides insights into LLM resource usage:
+
+```bash
+# View token statistics in execution summary
+cinder execution stats
+
+# Token metrics include:
+# - Total input tokens (prompt tokens)
+# - Total output tokens (completion tokens)
+# - Token generation speed (tok/s)
+# - Average tokens per call
+```
+
+**Token Display Format**:
+- **Progress bar**: `in:800 out:450 83.3 tok/s`
+  - Blue `in:X`: Input/prompt tokens
+  - Green `out:Y`: Output/completion tokens
+  - Magenta speed: Tokens per second
+
+**Benefits**:
+- Monitor LLM resource consumption
+- Optimize prompt length (reduce input tokens)
+- Track generation efficiency (output tokens per second)
+- Cost estimation for API-based LLMs
 
 ### Performance Tuning
 

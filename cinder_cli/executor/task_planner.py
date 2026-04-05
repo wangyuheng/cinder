@@ -101,13 +101,18 @@ class TaskPlanner:
 
             content = response.message.content if hasattr(response, 'message') else response.get("message", {}).get("content", "")
             
-            input_tokens = getattr(response, 'prompt_eval_count', 0) or response.get("prompt_eval_count", 0)
-            output_tokens = getattr(response, 'eval_count', 0) or response.get("eval_count", 0)
+            input_tokens_raw = getattr(response, 'prompt_eval_count', None) or response.get("prompt_eval_count")
+            output_tokens_raw = getattr(response, 'eval_count', None) or response.get("eval_count")
+            
+            input_tokens = input_tokens_raw if input_tokens_raw is not None else 0
+            output_tokens = output_tokens_raw if output_tokens_raw is not None else 0
             
             if self.debug:
                 print(f"\n[DEBUG] Token Extraction:")
                 print(f"  Has prompt_eval_count attr: {hasattr(response, 'prompt_eval_count')}")
                 print(f"  Has eval_count attr: {hasattr(response, 'eval_count')}")
+                print(f"  input_tokens_raw: {input_tokens_raw}")
+                print(f"  output_tokens_raw: {output_tokens_raw}")
                 print(f"  input_tokens: {input_tokens}")
                 print(f"  output_tokens: {output_tokens}")
             

@@ -8,12 +8,13 @@ from typing import Any
 import ollama
 
 from cinder_cli.config import Config
+from cinder_cli.executor.token_tracker import TokenTracker
 
 
 class CodeGenerator:
     """Generates code using Ollama model."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, token_tracker: TokenTracker | None = None):
         self.config = config
         self.model_name = config.get("model", "qwen3.5:0.8b")
         self.temperature = config.get("temperature", 0.2)
@@ -22,6 +23,7 @@ class CodeGenerator:
         self.stream = config.get("ollama_stream", True)
         self.debug = config.get("ollama_debug", False)
         self.client = ollama.Client(host=self.base_url)
+        self.token_tracker = token_tracker
 
     def generate_code(
         self,
@@ -67,6 +69,9 @@ class CodeGenerator:
                 code_chunks = []
                 print("[STREAM] ", end="", flush=True)
                 
+                input_tokens = 0
+                output_tokens = 0
+                
                 for chunk in self.client.chat(
                     model=self.model_name,
                     messages=messages,
@@ -74,13 +79,52 @@ class CodeGenerator:
                     keep_alive=self.keep_alive,
                     stream=True,
                 ):
-                    content = chunk.get("message", {}).get("content", "")
+                    content = chunk.message.content if hasattr(chunk, 'message') else chunk.get("message", {}).get("content", "")
                     if content:
                         print(content, end="", flush=True)
                         code_chunks.append(content)
+                    
+                    if hasattr(chunk, 'prompt_eval_count'):
+                        val = chunk.prompt_eval_count
+                        if val is not None:
+                            input_tokens = val
+                            if self.debug:
+                                print(f"\n[DEBUG] Updated input_tokens: {input_tokens}")
+                    elif "prompt_eval_count" in chunk:
+                        val = chunk.get("prompt_eval_count")
+                        if val is not None:
+                            input_tokens = val
+                            if self.debug:
+                                print(f"\n[DEBUG] Updated input_tokens: {input_tokens}")
+                    
+                    if hasattr(chunk, 'eval_count'):
+                        val = chunk.eval_count
+                        if val is not None:
+                            output_tokens = val
+                            if self.debug:
+                                print(f"\n[DEBUG] Updated output_tokens: {output_tokens}")
+                    elif "eval_count" in chunk:
+                        val = chunk.get("eval_count")
+                        if val is not None:
+                            output_tokens = val
+                            if self.debug:
+                                print(f"\n[DEBUG] Updated output_tokens: {output_tokens}")
                 
-                print()  # New line after streaming
+                print()
                 code = "".join(code_chunks)
+                
+                if self.debug:
+                    print(f"\n[DEBUG] Stream Token Summary:")
+                    print(f"  input_tokens: {input_tokens}")
+                    print(f"  output_tokens: {output_tokens}")
+                
+                if self.token_tracker and (input_tokens > 0 or output_tokens > 0):
+                    self.token_tracker.record_call(
+                        phase="generation",
+                        input_tokens=input_tokens,
+                        output_tokens=output_tokens,
+                        model=self.model_name,
+                    )
             else:
                 response = self.client.chat(
                     model=self.model_name,
@@ -88,12 +132,41 @@ class CodeGenerator:
                     options=options,
                     keep_alive=self.keep_alive,
                 )
-                code = response.get("message", {}).get("content", "")
+                
+                if self.debug:
+                    print(f"\n[DEBUG] CodeGenerator Response Type:")
+                    print(f"  {type(response)}")
+                
+                code = response.message.content if hasattr(response, 'message') else response.get("message", {}).get("content", "")
+                
+                input_tokens_raw = getattr(response, 'prompt_eval_count', None) or response.get("prompt_eval_count")
+                output_tokens_raw = getattr(response, 'eval_count', None) or response.get("eval_count")
+                
+                input_tokens = input_tokens_raw if input_tokens_raw is not None else 0
+                output_tokens = output_tokens_raw if output_tokens_raw is not None else 0
+                
+                if self.debug:
+                    print(f"\n[DEBUG] Token Extraction:")
+                    print(f"  Has prompt_eval_count attr: {hasattr(response, 'prompt_eval_count')}")
+                    print(f"  Has eval_count attr: {hasattr(response, 'eval_count')}")
+                    print(f"  input_tokens_raw: {input_tokens_raw}")
+                    print(f"  output_tokens_raw: {output_tokens_raw}")
+                    print(f"  input_tokens: {input_tokens}")
+                    print(f"  output_tokens: {output_tokens}")
+                
+                if self.token_tracker:
+                    self.token_tracker.record_call(
+                        phase="generation",
+                        input_tokens=input_tokens,
+                        output_tokens=output_tokens,
+                        model=self.model_name,
+                    )
 
             if self.debug:
                 print(f"\n[DEBUG] Ollama Response:")
                 print(f"  Code length: {len(code)} characters")
-                print(f"  First 200 chars: {code[:200]}...\n")
+                print(f"  First 200 chars: {code[:200]}...")
+                print(f"  Tokens: input={input_tokens}, output={output_tokens}\n")
 
             # Extract code from markdown if present
             code = self._extract_code(code)

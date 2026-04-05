@@ -4,6 +4,7 @@ Autonomous Executor - Main coordinator for task execution.
 
 from __future__ import annotations
 
+import time
 import questionary
 from pathlib import Path
 from typing import Any
@@ -27,6 +28,8 @@ from cinder_cli.executor.time_recorder import TimeRecorder
 from cinder_cli.executor.speed_calculator import SpeedCalculator
 from cinder_cli.executor.estimation_engine import EstimationEngine
 from cinder_cli.executor.progress_snapshot import ProgressSnapshot
+from cinder_cli.executor.token_tracker import TokenTracker
+from cinder_cli.executor.ollama_health_checker import OllamaHealthChecker
 
 console = Console()
 
@@ -36,8 +39,9 @@ class AutonomousExecutor:
 
     def __init__(self, config: Config):
         self.config = config
-        self.task_planner = TaskPlanner(config)
-        self.code_generator = CodeGenerator(config)
+        self.token_tracker = TokenTracker()
+        self.task_planner = TaskPlanner(config, self.token_tracker)
+        self.code_generator = CodeGenerator(config, self.token_tracker)
         self.reflection_engine = ReflectionEngine(config)
         self.file_operations = FileOperations(config)
         self.execution_logger = ExecutionLogger(config)
@@ -49,6 +53,9 @@ class AutonomousExecutor:
         self.time_recorder = TimeRecorder()
         self.speed_calculator = SpeedCalculator()
         self.estimation_engine = EstimationEngine()
+        
+        self.ollama_base_url = config.get("ollama_base_url", "http://localhost:11434")
+        self.health_checker = OllamaHealthChecker(self.ollama_base_url)
         
         self._execution_id: int | None = None
         self._progress_enabled = config.get("progress_tracking", True)
@@ -130,6 +137,30 @@ class AutonomousExecutor:
         """Run in automatic mode with strict phase separation."""
         from cinder_cli.cli_responsive_progress import ResponsiveProgressDisplay
         
+        model_name = self.config.get("model", "qwen3.5:0.8b")
+        health_status = self.health_checker.full_health_check(model_name)
+        
+        if not health_status["healthy"]:
+            console.print(f"\n[bold red]✗ Ollama 健康检查失败[/bold red]")
+            
+            connection = health_status.get("connection", {})
+            if connection:
+                console.print(f"[red]{connection.get('message', 'Unknown error')}[/red]")
+            
+            model_info = health_status.get("model")
+            if model_info:
+                console.print(f"[red]{model_info.get('message', '')}[/red]")
+            
+            console.print(f"\n[yellow]建议: {health_status['recommendation']}[/yellow]")
+            return {
+                "status": "error",
+                "goal": goal,
+                "error": "Ollama health check failed",
+                "health_status": health_status,
+            }
+        
+        console.print(f"[dim]✓ Ollama 服务正常 ({model_name})[/dim]")
+        
         execution_flow = {
             "goal": goal,
             "phases": [],
@@ -139,6 +170,7 @@ class AutonomousExecutor:
         try:
             self.time_recorder.start_execution()
             self.speed_calculator.start()
+            self.token_tracker.start()
             
             stats = self.execution_logger.get_execution_statistics()
             self.estimation_engine.set_historical_stats(stats)
@@ -146,7 +178,32 @@ class AutonomousExecutor:
             progress_display = ResponsiveProgressDisplay(console)
             progress_display.start("Initializing...")
             
-            progress_display.update(10, "PHASE 1: PLAN - Understanding goal...")
+            def update_progress_with_tokens(input_tokens: int, output_tokens: int) -> None:
+                """Callback to update progress display when tokens change."""
+                try:
+                    if progress_display._progress and progress_display._task_id is not None:
+                        elapsed = time.time() - self.token_tracker._start_time if self.token_tracker._start_time else 1
+                        token_speed = (input_tokens + output_tokens) / elapsed if elapsed > 0 else 0
+                        
+                        progress_display._progress.update(
+                            progress_display._task_id,
+                            input_tokens=input_tokens,
+                            output_tokens=output_tokens,
+                            token_speed=token_speed
+                        )
+                        progress_display._progress.refresh()
+                except Exception as e:
+                    pass
+            
+            self.token_tracker.add_callback(update_progress_with_tokens)
+            
+            progress_display.update(
+                10,
+                "PHASE 1: PLAN - Understanding goal...",
+                input_tokens=self.token_tracker.get_input_tokens(),
+                output_tokens=self.token_tracker.get_output_tokens(),
+                token_speed=self.token_tracker.get_tokens_per_second()
+            )
             self.time_recorder.start_phase("plan")
             self.progress_tracker.start_phase(ExecutionPhase.PLAN)
             
@@ -171,7 +228,13 @@ class AutonomousExecutor:
                 plan_result.get("quality_score", 0)
             )
             
-            progress_display.update(25, f"PHASE 2: GENERATION - Creating {tasks_count} tasks...")
+            progress_display.update(
+                25,
+                f"PHASE 2: GENERATION - Creating {tasks_count} tasks...",
+                input_tokens=self.token_tracker.get_input_tokens(),
+                output_tokens=self.token_tracker.get_output_tokens(),
+                token_speed=self.token_tracker.get_tokens_per_second()
+            )
             self.time_recorder.start_phase("generation")
             self.progress_tracker.start_phase(ExecutionPhase.GENERATION)
             
@@ -189,7 +252,13 @@ class AutonomousExecutor:
                 len(generation_results)
             )
             
-            progress_display.update(60, "PHASE 3: EVALUATION - Reviewing code...")
+            progress_display.update(
+                60,
+                "PHASE 3: EVALUATION - Reviewing code...",
+                input_tokens=self.token_tracker.get_input_tokens(),
+                output_tokens=self.token_tracker.get_output_tokens(),
+                token_speed=self.token_tracker.get_tokens_per_second()
+            )
             self.time_recorder.start_phase("evaluation")
             self.progress_tracker.start_phase(ExecutionPhase.EVALUATION)
             
@@ -209,7 +278,13 @@ class AutonomousExecutor:
                 len(evaluation_result.get("evaluations", []))
             )
             
-            progress_display.update(85, "PHASE 4: DECISION - Making decisions...")
+            progress_display.update(
+                85,
+                "PHASE 4: DECISION - Making decisions...",
+                input_tokens=self.token_tracker.get_input_tokens(),
+                output_tokens=self.token_tracker.get_output_tokens(),
+                token_speed=self.token_tracker.get_tokens_per_second()
+            )
             self.time_recorder.start_phase("decision")
             self.progress_tracker.start_phase(ExecutionPhase.DECISION)
             
@@ -224,7 +299,13 @@ class AutonomousExecutor:
                 self.time_recorder.get_phase_timestamps().get("decision", {}).get("duration", 0)
             )
             
-            progress_display.update(95, "Creating files...")
+            progress_display.update(
+                95,
+                "Creating files...",
+                input_tokens=self.token_tracker.get_input_tokens(),
+                output_tokens=self.token_tracker.get_output_tokens(),
+                token_speed=self.token_tracker.get_tokens_per_second()
+            )
             execution_result = self._execute_files_creation(decision_result, None)
             
             self.time_recorder.end_execution()
@@ -234,10 +315,12 @@ class AutonomousExecutor:
             
             speed_metrics = self.speed_calculator.get_speed_metrics()
             phase_timestamps = self.time_recorder.get_phase_timestamps()
+            token_metrics = self.token_tracker.get_metrics()
             
             console.print(f"\n[bold green]✓ 执行完成[/bold green]")
             console.print(f"[dim]总耗时: {self.time_recorder.get_execution_duration():.1f}秒[/dim]")
             console.print(f"[dim]速度: {speed_metrics['tasks_per_minute']:.1f} tasks/min[/dim]")
+            console.print(f"[dim]Token: {token_metrics['total_tokens']} (输入: {token_metrics['total_input_tokens']}, 输出: {token_metrics['total_output_tokens']}, 速度: {token_metrics['tokens_per_second']:.1f} tok/s)[/dim]")
             
             return {
                 "status": "success",
@@ -246,6 +329,7 @@ class AutonomousExecutor:
                 "results": execution_result,
                 "phase_timestamps": phase_timestamps,
                 "speed_metrics": speed_metrics,
+                "token_metrics": token_metrics,
             }
 
         except Exception as e:
@@ -351,7 +435,10 @@ class AutonomousExecutor:
         for i, subtask in enumerate(subtasks, 1):
             progress_display.update(
                 25 + (i / len(subtasks)) * 30,
-                f"PHASE 2: GENERATION - Task {i}/{len(subtasks)}"
+                f"PHASE 2: GENERATION - Task {i}/{len(subtasks)}",
+                input_tokens=self.token_tracker.get_input_tokens(),
+                output_tokens=self.token_tracker.get_output_tokens(),
+                token_speed=self.token_tracker.get_tokens_per_second()
             )
             
             self.time_recorder.start_task(f"task_{i}", subtask["description"])

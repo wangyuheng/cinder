@@ -1,7 +1,11 @@
 # Cinder Configuration Example
-# Copy this file to ~/.cinder/config.yaml and customize as needed
+# Copy this file to your project root as cinder.yaml or to ~/.cinder/config.yaml
 # 
 # Usage:
+#   cp examples/config.yaml cinder.yaml  # Project-level config (recommended)
+#   vim cinder.yaml
+#
+# Or for user-level config:
 #   cp examples/config.yaml ~/.cinder/config.yaml
 #   vim ~/.cinder/config.yaml
 
@@ -18,6 +22,10 @@ backend: ollama
 
 # Model name (for Ollama backend)
 model: qwen3.5:0.8b
+
+# Ollama server URL (default: http://localhost:11434)
+# Change this if your Ollama server runs on a different host
+ollama_base_url: "http://localhost:11434"
 
 # Temperature for response generation (0.0 - 2.0)
 # Lower values = more focused and deterministic

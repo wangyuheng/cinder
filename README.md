@@ -323,19 +323,66 @@ Soul 画像由两个文件组成：
    - 特质分数
    - 确认状态
 
+## 架构说明
+
+### 双层 Agent 架构
+
+Cinder v3.0.0 引入了创新的**双层 Agent 架构**，将决策和执行分离：
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    双层 Agent 架构                           │
+└─────────────────────────────────────────────────────────────┘
+
+    Decision Agent (大脑)  ←→  Worker Agent (执行者)
+         │                              │
+         ├─ 理解用户意图                 ├─ 任务分解
+         ├─ 做出决策                     ├─ 代码生成
+         ├─ 调度 Worker                  ├─ 质量评估
+         ├─ 评估结果                     └─ 状态报告
+         └─ 用户交互
+```
+
+**核心优势**：
+- ✅ **清晰的职责分离**：决策 vs 执行
+- ✅ **更好的决策质量**：基于 Soul profile 的个性化决策
+- ✅ **更强的扩展性**：轻松添加新的决策类型
+- ✅ **改进的可测试性**：模块化架构便于测试
+
+详见 [架构设计文档](docs/architecture.md)。
+
 ## 代理决策
 
 启用代理模式后，agent 可以基于你的 soul 画像代为决策：
 
-- **风险容忍度**：保守、平衡或激进的决策
-- **沟通风格**：结构化或对话式的响应
-- **决策边界**：高风险决策自动升级为人工确认
+### 决策类型
+
+- **代码接受决策**：基于代码质量自动判断
+  - 质量分数 ≥ 0.8：接受代码
+  - 质量分数 0.6-0.8：请求改进
+  - 质量分数 < 0.6：重新生成
+
+- **技术选型决策**：基于风险容忍度选择技术
+  - 保守型（≤38）：选择低风险技术
+  - 平衡型（38-66）：选择中等风险技术
+  - 激进型（≥66）：选择高风险高回报技术
+
+- **架构决策**：基于结构偏好选择架构模式
+  - 结构化偏好（≥65）：选择复杂但清晰的架构
+  - 灵活偏好（≤35）：选择简单灵活的架构
+
+- **实现决策**：基于细节导向选择实现方式
+  - 细节导向（≥65）：选择详细的实现
+  - 简洁导向（≤35）：选择简洁的实现
+
+### 决策记录
 
 所有代理决策都会记录：
 - 决策上下文
 - 应用的 soul 规则
 - 置信度分数
 - 是否需要人工确认
+- 决策理由和推理链
 
 ## 使用示例
 
@@ -402,7 +449,65 @@ cinder execution show 1 --format json
 cinder execution rollback 1
 ```
 
-## 从旧 CLI 迁移
+## 迁移指南
+
+### 从 v2.x 迁移到 v3.0.0
+
+v3.0.0 引入了**双层 Agent 架构**，这是一个重大的架构升级。主要变更：
+
+#### API 变更
+
+**返回结构变更**：
+```python
+# v2.x (旧)
+result = executor.execute(goal)
+# 返回: {"status": "success", "results": [...]}
+
+# v3.0.0 (新)
+executor = AutonomousExecutor(config, legacy_mode=False)
+result = executor.execute(goal)
+# 返回: {"status": "success", "decision": {...}, "worker_result": {...}}
+```
+
+#### 向后兼容
+
+使用 `legacy_mode=True` 保持向后兼容：
+```python
+executor = AutonomousExecutor(config, legacy_mode=True)
+result = executor.execute(goal)  # 使用旧的执行流程
+```
+
+#### 迁移步骤
+
+1. **测试兼容性**：
+   ```python
+   # 使用 legacy_mode 测试现有代码
+   executor = AutonomousExecutor(config, legacy_mode=True)
+   ```
+
+2. **逐步迁移**：
+   ```python
+   # 切换到新架构
+   executor = AutonomousExecutor(config, legacy_mode=False)
+   result = executor.execute(goal)
+   
+   # 访问新的结果结构
+   worker_result = result["worker_result"]
+   quality_score = worker_result["quality_score"]
+   ```
+
+3. **利用新功能**：
+   ```python
+   # 访问决策历史
+   for decision in result["decision_history"]:
+       print(f"决策: {decision['decision_type']}")
+       print(f"置信度: {decision['confidence']}")
+       print(f"理由: {decision['reasoning']}")
+   ```
+
+详见 [迁移指南](docs/migration-guide.md)。
+
+### 从旧 CLI 迁移
 
 如果你之前使用旧的 `cli.py` 和 `chat.py` 脚本：
 
