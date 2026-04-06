@@ -582,6 +582,70 @@ cinder chat --backend ollama
 
 ## 开发
 
+### 环境管理
+
+推荐使用虚拟环境：
+
+```bash
+# 创建虚拟环境
+python3 -m venv venv
+source venv/bin/activate  # Linux/macOS
+# 或 venv\Scripts\activate  # Windows
+
+# 安装依赖
+make install
+
+# 设置开发环境
+make dev
+```
+
+Cinder 使用 Makefile 和 Invoke 进行环境管理：
+
+```bash
+# 查看所有命令
+make help
+
+# 安装依赖
+make install
+
+# 设置开发环境
+make dev
+
+# 运行测试
+make test
+
+# 检查服务状态
+make status
+
+# 清理环境
+make clean
+```
+
+或使用 Invoke（Python 原生）：
+
+```bash
+# 安装 invoke
+pip install invoke
+
+# 查看所有任务
+inv --list
+
+# 设置开发环境
+inv dev
+
+# 运行测试
+inv test
+```
+
+**注意**: 如果遇到 `pip: command not found` 错误，请参考 [Makefile 使用说明](docs/MAKEFILE_USAGE.md)。
+
+### 文档
+
+- [开发指南](docs/DEVELOPMENT.md) - 详细的开发环境设置
+- [可观测性指南](docs/OBSERVABILITY.md) - Tracing 和监控
+- [服务管理](docs/SERVICE_MANAGEMENT.md) - 外部依赖管理
+- [验证指南](docs/VERIFICATION.md) - 功能验证流程
+
 ### 运行测试
 
 ```bash

@@ -30,6 +30,7 @@ from cinder_cli.executor.estimation_engine import EstimationEngine
 from cinder_cli.executor.progress_snapshot import ProgressSnapshot
 from cinder_cli.executor.token_tracker import TokenTracker
 from cinder_cli.executor.ollama_health_checker import OllamaHealthChecker
+from cinder_cli.tracing import AgentTracer, LLMTracer, PhoenixTracer, TracingConfig
 
 console = Console()
 
@@ -40,9 +41,17 @@ class AutonomousExecutor:
     def __init__(self, config: Config):
         self.config = config
         self.token_tracker = TokenTracker()
-        self.task_planner = TaskPlanner(config, self.token_tracker)
-        self.code_generator = CodeGenerator(config, self.token_tracker)
-        self.reflection_engine = ReflectionEngine(config)
+        
+        # Initialize tracing first
+        tracing_config = TracingConfig.from_dict(config.to_dict())
+        self.phoenix_tracer = PhoenixTracer.initialize(tracing_config)
+        self.llm_tracer = LLMTracer(self.phoenix_tracer)
+        self.agent_tracer = AgentTracer(self.phoenix_tracer)
+        
+        # Pass tracer to components
+        self.task_planner = TaskPlanner(config, self.token_tracker, self.llm_tracer)
+        self.code_generator = CodeGenerator(config, self.token_tracker, self.llm_tracer)
+        self.reflection_engine = ReflectionEngine(config, self.llm_tracer)
         self.file_operations = FileOperations(config)
         self.execution_logger = ExecutionLogger(config)
         self.decision_db = DecisionDatabase(config.database_path)
@@ -120,14 +129,31 @@ class AutonomousExecutor:
             Execution result with status, files created, and other metadata
         """
         console.print(f"\n[bold cyan]执行目标:[/bold cyan] {goal}")
+        
+        project_name = self.task_planner.infer_project_name(goal, constraints)
+        project_dir = self.file_operations.working_dir / project_name
+        
+        if not project_dir.exists():
+            project_dir.mkdir(parents=True, exist_ok=True)
+            console.print(f"[dim]✓ 创建项目目录: {project_dir}[/dim]")
+        else:
+            console.print(f"[dim]✓ 使用现有项目目录: {project_dir}[/dim]")
+        
+        self.file_operations = FileOperations(self.config, project_dir)
 
-        if mode == "dry-run":
-            return self._dry_run(goal, constraints)
+        with self.agent_tracer.trace_agent_execution(
+            agent_id="autonomous_executor",
+            agent_role="coordinator",
+            goal=goal,
+            mode=mode,
+        ):
+            if mode == "dry-run":
+                return self._dry_run(goal, constraints)
 
-        if mode == "interactive":
-            return self._interactive_run(goal, constraints)
+            if mode == "interactive":
+                return self._interactive_run(goal, constraints)
 
-        return self._auto_run(goal, constraints)
+            return self._auto_run(goal, constraints)
 
     def _auto_run(
         self,
@@ -288,7 +314,7 @@ class AutonomousExecutor:
             self.time_recorder.start_phase("decision")
             self.progress_tracker.start_phase(ExecutionPhase.DECISION)
             
-            decision_result = self._execute_decision_phase(evaluation_result, None, None)
+            decision_result = self._execute_decision_phase(evaluation_result, generation_results, None, None)
             execution_flow["phases"].append(decision_result)
             
             self.time_recorder.end_phase("decision")
@@ -316,11 +342,6 @@ class AutonomousExecutor:
             speed_metrics = self.speed_calculator.get_speed_metrics()
             phase_timestamps = self.time_recorder.get_phase_timestamps()
             token_metrics = self.token_tracker.get_metrics()
-            
-            console.print(f"\n[bold green]✓ 执行完成[/bold green]")
-            console.print(f"[dim]总耗时: {self.time_recorder.get_execution_duration():.1f}秒[/dim]")
-            console.print(f"[dim]速度: {speed_metrics['tasks_per_minute']:.1f} tasks/min[/dim]")
-            console.print(f"[dim]Token: {token_metrics['total_tokens']} (输入: {token_metrics['total_input_tokens']}, 输出: {token_metrics['total_output_tokens']}, 速度: {token_metrics['tokens_per_second']:.1f} tok/s)[/dim]")
             
             return {
                 "status": "success",
@@ -351,37 +372,41 @@ class AutonomousExecutor:
         task: Any | None,
     ) -> dict[str, Any]:
         """Execute Plan phase with validation."""
-        if progress and task is not None:
-            progress.update(task, description="[bold blue]PHASE 1: PLAN - Understanding goal...[/bold blue]")
+        with self.agent_tracer.trace_phase(
+            phase_name="plan",
+            parent_task_id="autonomous_executor",
+        ):
+            if progress and task is not None:
+                progress.update(task, description="[bold blue]PHASE 1: PLAN - Understanding goal...[/bold blue]")
 
-        plan = self.task_planner.decompose_goal_with_validation(
-            goal,
-            constraints,
-            max_retries=2,
-            quality_threshold=0.7,
-        )
+            plan = self.task_planner.decompose_goal_with_validation(
+                goal,
+                constraints,
+                max_retries=2,
+                quality_threshold=0.7,
+            )
 
-        validation = plan.get("validation", {})
-        quality_score = validation.get("quality_score", 0)
+            validation = plan.get("validation", {})
+            quality_score = validation.get("quality_score", 0)
 
-        if progress and task is not None:
-            progress.update(task, description=f"[bold blue]PHASE 1: PLAN - Quality: {quality_score:.2f}[/bold blue]")
+            if progress and task is not None:
+                progress.update(task, description=f"[bold blue]PHASE 1: PLAN - Quality: {quality_score:.2f}[/bold blue]")
 
-        if quality_score < 0.7:
-            console.print(f"[yellow]⚠ Plan quality low: {quality_score:.2f}[/yellow]")
-            if validation.get("issues"):
-                for issue in validation["issues"]:
-                    console.print(f"  - {issue}")
+            if quality_score < 0.7:
+                console.print(f"[yellow]⚠ Plan quality low: {quality_score:.2f}[/yellow]")
+                if validation.get("issues"):
+                    for issue in validation["issues"]:
+                        console.print(f"  - {issue}")
 
-        console.print(f"[dim]Plan phase complete: {len(plan.get('subtasks', []))} tasks, quality={quality_score:.2f}[/dim]")
+            console.print(f"[dim]Plan phase complete: {len(plan.get('subtasks', []))} tasks, quality={quality_score:.2f}[/dim]")
 
-        return {
-            "phase": "plan",
-            "success": quality_score >= 0.7,
-            "plan": plan,
-            "quality_score": quality_score,
-            "attempts": plan.get("attempts", 1),
-        }
+            return {
+                "phase": "plan",
+                "success": quality_score >= 0.7,
+                "plan": plan,
+                "quality_score": quality_score,
+                "attempts": plan.get("attempts", 1),
+            }
 
     def _execute_generation_phase(
         self,
@@ -393,33 +418,37 @@ class AutonomousExecutor:
         results = []
         subtasks = plan.get("subtasks", [])
 
-        for i, subtask in enumerate(subtasks, 1):
-            if progress and task is not None:
-                progress.update(
-                    task,
-                    description=f"[bold green]PHASE 2: GENERATION - Task {i}/{len(subtasks)}[/bold green]"
+        with self.agent_tracer.trace_phase(
+            phase_name="generation",
+            parent_task_id="autonomous_executor",
+        ):
+            for i, subtask in enumerate(subtasks, 1):
+                if progress and task is not None:
+                    progress.update(
+                        task,
+                        description=f"[bold green]PHASE 2: GENERATION - Task {i}/{len(subtasks)}[/bold green]"
+                    )
+
+                generation_result = self.code_generator.generate_with_iterations(
+                    subtask["description"],
+                    subtask.get("language", "python"),
+                    subtask.get("constraints"),
+                    max_iterations=3,
+                    quality_threshold=0.8,
                 )
 
-            generation_result = self.code_generator.generate_with_iterations(
-                subtask["description"],
-                subtask.get("language", "python"),
-                subtask.get("constraints"),
-                max_iterations=3,
-                quality_threshold=0.8,
-            )
+                results.append({
+                    "phase": "generation",
+                    "subtask_id": subtask.get("id"),
+                    "subtask": subtask,
+                    "code": generation_result.get("code"),
+                    "iterations": generation_result.get("iterations", 1),
+                    "quality_score": generation_result.get("final_score", 0),
+                    "quality_threshold_met": generation_result.get("quality_threshold_met", False),
+                    "iteration_history": generation_result.get("iteration_history", []),
+                })
 
-            results.append({
-                "phase": "generation",
-                "subtask_id": subtask.get("id"),
-                "subtask": subtask,
-                "code": generation_result.get("code"),
-                "iterations": generation_result.get("iterations", 1),
-                "quality_score": generation_result.get("final_score", 0),
-                "quality_threshold_met": generation_result.get("quality_threshold_met", False),
-                "iteration_history": generation_result.get("iteration_history", []),
-            })
-
-            console.print(f"[dim]Task {i}: {generation_result.get('iterations', 1)} iterations, quality={generation_result.get('final_score', 0):.2f}[/dim]")
+                console.print(f"[dim]Task {i}: {generation_result.get('iterations', 1)} iterations, quality={generation_result.get('final_score', 0):.2f}[/dim]")
 
         return results
 
@@ -432,38 +461,42 @@ class AutonomousExecutor:
         results = []
         subtasks = plan.get("subtasks", [])
         
-        for i, subtask in enumerate(subtasks, 1):
-            progress_display.update(
-                25 + (i / len(subtasks)) * 30,
-                f"PHASE 2: GENERATION - Task {i}/{len(subtasks)}",
-                input_tokens=self.token_tracker.get_input_tokens(),
-                output_tokens=self.token_tracker.get_output_tokens(),
-                token_speed=self.token_tracker.get_tokens_per_second()
-            )
-            
-            self.time_recorder.start_task(f"task_{i}", subtask["description"])
-            
-            generation_result = self.code_generator.generate_with_iterations(
-                subtask["description"],
-                subtask.get("language", "python"),
-                subtask.get("constraints"),
-                max_iterations=3,
-                quality_threshold=0.8,
-            )
-            
-            self.time_recorder.end_task(f"task_{i}")
-            self.speed_calculator.record_task_completed()
-            
-            results.append({
-                "phase": "generation",
-                "subtask_id": subtask.get("id"),
-                "subtask": subtask,
-                "code": generation_result.get("code"),
-                "iterations": generation_result.get("iterations", 1),
-                "quality_score": generation_result.get("final_score", 0),
-            })
-            
-            console.print(f"[dim]Task {i}: {generation_result.get('iterations', 1)} iterations, quality={generation_result.get('final_score', 0):.2f}[/dim]")
+        with self.agent_tracer.trace_phase(
+            phase_name="generation",
+            parent_task_id="autonomous_executor",
+        ):
+            for i, subtask in enumerate(subtasks, 1):
+                progress_display.update(
+                    25 + (i / len(subtasks)) * 30,
+                    f"PHASE 2: GENERATION - Task {i}/{len(subtasks)}",
+                    input_tokens=self.token_tracker.get_input_tokens(),
+                    output_tokens=self.token_tracker.get_output_tokens(),
+                    token_speed=self.token_tracker.get_tokens_per_second()
+                )
+                
+                self.time_recorder.start_task(f"task_{i}", subtask["description"])
+                
+                generation_result = self.code_generator.generate_with_iterations(
+                    subtask["description"],
+                    subtask.get("language", "python"),
+                    subtask.get("constraints"),
+                    max_iterations=3,
+                    quality_threshold=0.8,
+                )
+                
+                self.time_recorder.end_task(f"task_{i}")
+                self.speed_calculator.record_task_completed()
+                
+                results.append({
+                    "phase": "generation",
+                    "subtask_id": subtask.get("id"),
+                    "subtask": subtask,
+                    "code": generation_result.get("code"),
+                    "iterations": generation_result.get("iterations", 1),
+                    "quality_score": generation_result.get("final_score", 0),
+                })
+                
+                console.print(f"[dim]Task {i}: {generation_result.get('iterations', 1)} iterations, quality={generation_result.get('final_score', 0):.2f}[/dim]")
         
         return results
 
@@ -474,46 +507,51 @@ class AutonomousExecutor:
         task: Any | None,
     ) -> dict[str, Any]:
         """Execute Evaluation phase with comprehensive assessment."""
-        if progress and task is not None:
-            progress.update(task, description="[bold yellow]PHASE 3: EVALUATION - Assessing quality...[/bold yellow]")
+        with self.agent_tracer.trace_phase(
+            phase_name="evaluation",
+            parent_task_id="autonomous_executor",
+        ):
+            if progress and task is not None:
+                progress.update(task, description="[bold yellow]PHASE 3: EVALUATION - Assessing quality...[/bold yellow]")
 
-        evaluations = []
-        all_approved = True
+            evaluations = []
+            all_approved = True
 
-        for gen_result in generation_results:
-            code = gen_result.get("code", "")
-            subtask = gen_result.get("subtask", {})
+            for gen_result in generation_results:
+                code = gen_result.get("code", "")
+                subtask = gen_result.get("subtask", {})
 
-            evaluation = self.reflection_engine.evaluate_comprehensive(
-                code,
-                subtask,
-                self.soul_meta,
-            )
+                evaluation = self.reflection_engine.evaluate_comprehensive(
+                    code,
+                    subtask,
+                    self.soul_meta,
+                )
 
-            evaluations.append({
-                "subtask_id": gen_result.get("subtask_id"),
-                "evaluation": evaluation,
-                "approved": evaluation.get("approved", False),
-            })
+                evaluations.append({
+                    "subtask_id": gen_result.get("subtask_id"),
+                    "evaluation": evaluation,
+                    "approved": evaluation.get("approved", False),
+                })
 
-            if not evaluation.get("approved", False):
-                all_approved = False
+                if not evaluation.get("approved", False):
+                    all_approved = False
 
-            quality_score = evaluation.get("quality_score", 0)
-            console.print(f"[dim]Evaluated {gen_result.get('subtask_id')}: quality={quality_score:.2f}, approved={evaluation.get('approved', False)}[/dim]")
+                quality_score = evaluation.get("quality_score", 0)
+                console.print(f"[dim]Evaluated {gen_result.get('subtask_id')}: quality={quality_score:.2f}, approved={evaluation.get('approved', False)}[/dim]")
 
-        avg_quality = sum(e["evaluation"].get("quality_score", 0) for e in evaluations) / len(evaluations) if evaluations else 0
+            avg_quality = sum(e["evaluation"].get("quality_score", 0) for e in evaluations) / len(evaluations) if evaluations else 0
 
-        return {
-            "phase": "evaluation",
-            "evaluations": evaluations,
-            "all_approved": all_approved,
-            "average_quality": round(avg_quality, 2),
+            return {
+                "phase": "evaluation",
+                "evaluations": evaluations,
+                "all_approved": all_approved,
+                "average_quality": round(avg_quality, 2),
         }
 
     def _execute_decision_phase(
         self,
         evaluation_result: dict[str, Any],
+        generation_results: list[dict[str, Any]] | None,
         progress: Progress | None,
         task: Any | None,
     ) -> dict[str, Any]:
@@ -522,6 +560,7 @@ class AutonomousExecutor:
             progress.update(task, description="[bold magenta]PHASE 4: DECISION - Making decisions...[/bold magenta]")
 
         decisions = []
+        force_file_creation = self.config.get("force_file_creation", False)
 
         for eval_item in evaluation_result.get("evaluations", []):
             evaluation = eval_item.get("evaluation", {})
@@ -554,13 +593,13 @@ class AutonomousExecutor:
                 decisions.append({
                     "subtask_id": eval_item.get("subtask_id"),
                     "decision": decision,
-                    "accepted": decision.get("text") == "接受代码",
+                    "accepted": decision.get("text") == "接受代码" or force_file_creation,
                 })
             else:
                 decisions.append({
                     "subtask_id": eval_item.get("subtask_id"),
                     "decision": {"text": "接受代码", "quality": quality_score},
-                    "accepted": evaluation.get("approved", False),
+                    "accepted": evaluation.get("approved", False) or force_file_creation,
                 })
 
         accepted_count = sum(1 for d in decisions if d.get("accepted", False))
@@ -571,6 +610,7 @@ class AutonomousExecutor:
             "phase": "decision",
             "decisions": decisions,
             "accepted_count": accepted_count,
+            "generation_results": generation_results,
         }
 
     def _execute_files_creation(
@@ -580,9 +620,15 @@ class AutonomousExecutor:
     ) -> list[dict[str, Any]]:
         """Execute file creation based on decisions."""
         results = []
+        force_file_creation = self.config.get("force_file_creation", False)
+
+        if force_file_creation:
+            console.print("[dim]强制文件生成模式已启用[/dim]")
 
         for decision in decision_result.get("decisions", []):
-            if decision.get("accepted", False):
+            should_create = decision.get("accepted", False) or force_file_creation
+            
+            if should_create:
                 subtask_id = decision.get("subtask_id")
 
                 gen_result = next(
@@ -591,16 +637,24 @@ class AutonomousExecutor:
                 )
 
                 if gen_result:
-                    file_result = self.file_operations.create_file(
-                        gen_result.get("subtask", {}).get("file_path", "output.py"),
-                        gen_result.get("code", ""),
-                    )
+                    file_path = gen_result.get("subtask", {}).get("file_path", "output.py")
+                    code = gen_result.get("code", "")
+                    
+                    if code and code.strip():
+                        file_result = self.file_operations.create_file(
+                            file_path,
+                            code,
+                        )
 
-                    results.append({
-                        "subtask_id": subtask_id,
-                        "file_result": file_result,
-                        "code": gen_result.get("code"),
-                    })
+                        results.append({
+                            "subtask_id": subtask_id,
+                            "file_result": file_result,
+                            "code": code,
+                            "file_path": file_path,
+                        })
+                        console.print(f"[dim]创建文件: {file_path}[/dim]")
+                    else:
+                        console.print(f"[yellow]跳过空代码文件: {file_path}[/yellow]")
 
         return results
 
@@ -703,7 +757,6 @@ class AutonomousExecutor:
 
         self.execution_logger.log_execution(goal, task_tree, results)
 
-        console.print("\n[green]✓ 执行完成[/green]")
         return {
             "status": "success",
             "goal": goal,

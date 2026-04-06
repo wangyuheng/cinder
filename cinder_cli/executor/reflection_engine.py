@@ -7,19 +7,23 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from cinder_cli.config import Config
+
+if TYPE_CHECKING:
+    from cinder_cli.tracing import LLMTracer
 
 
 class ReflectionEngine:
     """Evaluates execution results based on soul profile."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, llm_tracer: LLMTracer | None = None):
         self.config = config
         self.soul_meta = self._load_soul_meta()
         self.reflection_history: list[dict[str, Any]] = []
         self.history_file = Path.home() / ".cinder" / "reflection_history.json"
+        self.llm_tracer = llm_tracer
         self._load_history()
 
     def evaluate_execution(
@@ -44,19 +48,15 @@ class ReflectionEngine:
             "risks": [],
         }
 
-        # Check risk consistency
         risk_evaluation = self._check_risk_consistency(code, task)
         evaluation["risks"].extend(risk_evaluation.get("risks", []))
 
-        # Check style consistency
         style_evaluation = self._check_style_consistency(code)
         evaluation["suggestions"].extend(style_evaluation.get("suggestions", []))
 
-        # Check code quality
         quality_evaluation = self._check_code_quality(code)
         evaluation["quality_score"] = quality_evaluation.get("score", 0.8)
 
-        # Make approval decision
         if evaluation["quality_score"] < 0.5:
             evaluation["approved"] = False
             evaluation["suggestions"].append("代码质量过低，需要重新生成")

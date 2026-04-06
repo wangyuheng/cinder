@@ -33,22 +33,30 @@ class OllamaHealthChecker:
                         "message": "Ollama service is running",
                     }
                 else:
+                    error_detail = ""
+                    try:
+                        error_body = response.text
+                        if error_body:
+                            error_detail = f" - {error_body}"
+                    except Exception:
+                        pass
                     return {
                         "connected": False,
                         "status": "error",
-                        "message": f"Ollama returned status code {response.status_code}",
+                        "status_code": response.status_code,
+                        "message": f"Ollama returned status code {response.status_code}{error_detail}",
                     }
-        except httpx.ConnectError:
+        except httpx.ConnectError as e:
             return {
                 "connected": False,
                 "status": "not_running",
-                "message": "Ollama service is not running. Please start Ollama first.",
+                "message": f"Ollama service is not running. Please start Ollama first. Error: {str(e)}",
             }
         except httpx.TimeoutException:
             return {
                 "connected": False,
                 "status": "timeout",
-                "message": "Ollama service is not responding (timeout)",
+                "message": f"Ollama service is not responding (timeout: {self.timeout}s)",
             }
         except Exception as e:
             return {
@@ -88,9 +96,16 @@ class OllamaHealthChecker:
                             "available_models": model_names,
                         }
                 else:
+                    error_detail = ""
+                    try:
+                        error_body = response.text
+                        if error_body:
+                            error_detail = f" - {error_body}"
+                    except Exception:
+                        pass
                     return {
                         "available": False,
-                        "message": "Failed to get model list",
+                        "message": f"Failed to get model list (status {response.status_code}){error_detail}",
                     }
         except Exception as e:
             return {
@@ -117,9 +132,16 @@ class OllamaHealthChecker:
                         "message": "Ollama service is running",
                     }
                 else:
+                    error_detail = ""
+                    try:
+                        error_body = response.text
+                        if error_body:
+                            error_detail = f" - {error_body}"
+                    except Exception:
+                        pass
                     return {
                         "connected": False,
-                        "message": "Failed to get version info",
+                        "message": f"Failed to get version info (status {response.status_code}){error_detail}",
                     }
         except Exception as e:
             return {

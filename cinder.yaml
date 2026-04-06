@@ -1,41 +1,74 @@
-backend: ollama
-model: minimax-m2.7:cloud
+# ==============================================================================
+# Cinder CLI 配置文件
+# ==============================================================================
 
-ollama_base_url: "http://localhost:11434"
-ollama_keep_alive: "10m"
-ollama_stream: true
-ollama_debug: true
+# ------------------------------------------------------------------------------
+# 后端配置
+# ------------------------------------------------------------------------------
+backend: ollama                    # LLM 后端: ollama 或 claude
+model: gemma4:e2b                  # 使用的模型名称
 
-temperature: 0.2
+# ------------------------------------------------------------------------------
+# Ollama 配置
+# ------------------------------------------------------------------------------
+ollama_base_url: "http://localhost:11434"  # Ollama 服务地址
+ollama_keep_alive: "10m"                   # 模型在内存中保持活跃的时间
+ollama_stream: false                        # 是否启用流式输出（实时显示生成内容）
+ollama_debug: false                         # 是否启用调试日志（显示详细的 LLM 请求/响应信息）
 
-soul_path: soul.md
-meta_path: ""
+# ------------------------------------------------------------------------------
+# 模型参数
+# ------------------------------------------------------------------------------
+temperature: 0.2                  # 生成温度（0-1，越低越确定，越高越随机）
 
-proxy_mode: false
-decision_logging: true
+# ------------------------------------------------------------------------------
+# Soul 画像配置
+# ------------------------------------------------------------------------------
+soul_path: soul.md                # Soul 画像文件路径（人类可读的性格画像）
+meta_path: ""                     # Soul 元数据文件路径（机器可读的性格数据）
 
-reflection_loop: false
-max_iterations: 3
-sleep_seconds: 1.0
+# ------------------------------------------------------------------------------
+# 代理模式配置
+# ------------------------------------------------------------------------------
+proxy_mode: false                 # 是否启用代理模式（让 Agent 代表用户做决策）
+decision_logging: true            # 是否记录决策日志（用于代理模式的历史记录）
 
-plan_quality_threshold: 0.7
-code_quality_threshold: 0.8
-evaluation_quality_threshold: 0.7
+# ------------------------------------------------------------------------------
+# 反思循环配置
+# ------------------------------------------------------------------------------
+reflection_loop: false            # 是否启用反思循环（Claude 后端专用）
+max_iterations: 3                 # 最大迭代次数
+sleep_seconds: 1.0                # 迭代间隔时间（秒）
 
-enable_iterative_generation: true
-enable_plan_validation: true
-enable_comprehensive_evaluation: true
+# ------------------------------------------------------------------------------
+# 质量阈值配置
+# ------------------------------------------------------------------------------
+plan_quality_threshold: 0.7       # 计划质量阈值（0-1，低于此值会重新规划）
+code_quality_threshold: 0.8       # 代码质量阈值（0-1，低于此值会重新生成）
+evaluation_quality_threshold: 0.7 # 评估质量阈值（0-1，低于此值会重新评估）
 
+# ------------------------------------------------------------------------------
+# 执行模式配置
+# ------------------------------------------------------------------------------
+enable_iterative_generation: true      # 是否启用迭代生成（质量不达标时自动重试）
+enable_plan_validation: true           # 是否启用计划验证
+enable_comprehensive_evaluation: true  # 是否启用全面评估
+force_file_creation: true              # 是否强制创建文件（即使代码为空）
+
+# ------------------------------------------------------------------------------
+# Codex 集成配置
+# ------------------------------------------------------------------------------
 codex_integration:
-  enabled: true
-  fallback_on_error: true
-  default_executor: "exec"
+  enabled: true                   # 是否启用 Codex 集成
+  fallback_on_error: true         # 出错时是否回退到本地执行
+  default_executor: "exec"        # 默认执行器: exec, app_server, mcp
   
+  # exec 执行器配置
   exec:
-    model: "gpt-5.4"
-    sandbox_mode: "danger-full-access"
-    approval_policy: "never"
-    skip_git_repo_check: true
-    ephemeral: true
-    timeout: 300
-    full_auto: true
+    model: "gpt-5.4"              # 使用的 GPT 模型
+    sandbox_mode: "danger-full-access"  # 沙箱模式: read-only, workspace-write, danger-full-access
+    approval_policy: "never"      # 审批策略: never, on-request, on-failure, untrusted
+    skip_git_repo_check: true     # 是否跳过 Git 仓库检查
+    ephemeral: true               # 是否使用临时容器
+    timeout: 300                  # 超时时间（秒）
+    full_auto: true               # 是否完全自动化（无需人工确认）

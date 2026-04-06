@@ -135,8 +135,12 @@ class Config:
         return self.config_dir / "decisions.db"
 
     @property
-    def all(self) -> dict[str, Any]:
+    def get_all(self) -> dict[str, Any]:
         """Get all configuration values."""
+        return self._config.copy()
+    
+    def to_dict(self) -> dict[str, Any]:
+        """Convert configuration to dictionary."""
         return self._config.copy()
 
     @property

@@ -97,6 +97,31 @@ log_retention_days: 90
 encryption: false
 
 # =============================================================================
+# Tracing & Observability Settings
+# =============================================================================
+
+# Enable tracing for LLM calls and Agent behavior
+# When enabled, all LLM calls and Agent decisions will be tracked
+tracing:
+  enabled: true
+  
+  # Phoenix server endpoint (default: http://localhost:6006)
+  # Leave empty to use local Phoenix instance
+  phoenix_endpoint: ""
+  
+  # Trace sampling rate (0.0 - 1.0)
+  # 1.0 = record all traces, 0.5 = record 50% of traces
+  sample_rate: 1.0
+  
+  # Number of days to retain trace data
+  # Traces older than this will be auto-deleted
+  retention_days: 30
+  
+  # Compression threshold for large content (in bytes)
+  # Content larger than this will be compressed
+  compression_threshold: 1024
+
+# =============================================================================
 # Advanced Settings
 # =============================================================================
 

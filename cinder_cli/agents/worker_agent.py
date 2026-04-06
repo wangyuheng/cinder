@@ -27,6 +27,7 @@ from cinder_cli.executor.codex_integration_manager import (
     TaskContext,
 )
 from cinder_cli.executor.codex_exceptions import CodexError
+from cinder_cli.tracing import AgentTracer, LLMTracer, PhoenixTracer, TracingConfig
 
 
 @dataclass
@@ -89,6 +90,11 @@ class WorkerAgent(BaseAgent):
         
         self.current_task: Task | None = None
         self.execution_history: list[WorkerOutput] = []
+        
+        tracing_config = TracingConfig.from_dict(config.to_dict())
+        self.phoenix_tracer = PhoenixTracer.initialize(tracing_config)
+        self.llm_tracer = LLMTracer(self.phoenix_tracer)
+        self.agent_tracer = AgentTracer(self.phoenix_tracer)
     
     def process_message(self, message: Message) -> Message | None:
         """Process incoming message."""
@@ -118,35 +124,41 @@ class WorkerAgent(BaseAgent):
         self.current_task = task
         self.set_state(AgentState.RUNNING)
         
-        try:
-            output = self._execute_task(task)
-            
-            execution_time = time.time() - start_time
-            
-            result = Result(
-                task_id=task.task_id,
-                output_type=output.output_type,
-                data=output.data,
-                quality_score=output.quality_score,
-                execution_time=execution_time,
-                metadata=output.metadata,
-            )
-            
-            self.execution_history.append(output)
-            self.set_state(AgentState.COMPLETE)
-            
-            return result
-            
-        except Exception as e:
-            self.set_state(AgentState.ERROR)
-            
-            return Result(
-                task_id=task.task_id,
-                output_type="error",
-                data={"error": str(e)},
-                quality_score=0.0,
-                execution_time=time.time() - start_time,
-            )
+        with self.agent_tracer.trace_agent_execution(
+            agent_id=self.agent_id,
+            agent_role="worker",
+            goal=task.description,
+            task_id=task.task_id,
+        ):
+            try:
+                output = self._execute_task(task)
+                
+                execution_time = time.time() - start_time
+                
+                result = Result(
+                    task_id=task.task_id,
+                    output_type=output.output_type,
+                    data=output.data,
+                    quality_score=output.quality_score,
+                    execution_time=execution_time,
+                    metadata=output.metadata,
+                )
+                
+                self.execution_history.append(output)
+                self.set_state(AgentState.COMPLETE)
+                
+                return result
+                
+            except Exception as e:
+                self.set_state(AgentState.ERROR)
+                
+                return Result(
+                    task_id=task.task_id,
+                    output_type="error",
+                    data={"error": str(e)},
+                    quality_score=0.0,
+                    execution_time=time.time() - start_time,
+                )
     
     def _execute_task(self, task: Task) -> WorkerOutput:
         """Execute the Plan → Generate → Evaluation flow."""
@@ -227,19 +239,28 @@ class WorkerAgent(BaseAgent):
     
     def _plan(self, task: Task) -> dict[str, Any]:
         """Plan phase - decompose task."""
-        plan_result = self.planner.decompose_goal_with_validation(
-            task.description,
-            task.constraints,
-            max_retries=2,
-            quality_threshold=0.7,
-        )
-        
-        return {
-            "type": "tasks",
-            "goal": plan_result.get("goal", ""),
-            "subtasks": plan_result.get("subtasks", []),
-            "quality_score": plan_result.get("validation", {}).get("quality_score", 0.0),
-        }
+        with self.agent_tracer.trace_agent_decision(
+            agent_id=self.agent_id,
+            decision_type="task_planning",
+            context=task.description,
+            reasoning="Decomposing task into subtasks",
+        ) as decision:
+            plan_result = self.planner.decompose_goal_with_validation(
+                task.description,
+                task.constraints,
+                max_retries=2,
+                quality_threshold=0.7,
+            )
+            
+            decision.result = f"Generated {len(plan_result.get('subtasks', []))} subtasks"
+            decision.confidence = plan_result.get("validation", {}).get("quality_score", 0.0)
+            
+            return {
+                "type": "tasks",
+                "goal": plan_result.get("goal", ""),
+                "subtasks": plan_result.get("subtasks", []),
+                "quality_score": plan_result.get("validation", {}).get("quality_score", 0.0),
+            }
     
     def _generate(
         self,
@@ -255,10 +276,19 @@ class WorkerAgent(BaseAgent):
                 "code": "",
             }
         
-        if self._should_use_codex(task):
-            return self._generate_with_codex(subtasks, task)
-        else:
-            return self._generate_with_code_generator(subtasks)
+        with self.agent_tracer.trace_tool_call(
+            agent_id=self.agent_id,
+            tool_name="code_generator",
+            input_params={"subtasks_count": len(subtasks)},
+        ) as tool_call:
+            if self._should_use_codex(task):
+                result = self._generate_with_codex(subtasks, task)
+                tool_call.output_result = f"Generated code with Codex ({result.get('iterations', 0)} iterations)"
+            else:
+                result = self._generate_with_code_generator(subtasks)
+                tool_call.output_result = f"Generated code ({result.get('iterations', 0)} iterations)"
+            
+            return result
     
     def _should_use_codex(self, task: Task) -> bool:
         """Determine if Codex should be used for this task."""
@@ -278,6 +308,18 @@ class WorkerAgent(BaseAgent):
         soul_meta = task.metadata.get("soul_meta", {})
         decision_context = task.metadata.get("decision_context", {})
         
+        def output_callback(line: str, stream_type: str):
+            """Callback for streaming output."""
+            import logging
+            logger = logging.getLogger(__name__)
+            
+            if stream_type == "stdout":
+                logger.info(f"[Codex] {line.rstrip()}")
+            elif stream_type == "stderr":
+                logger.warning(f"[Codex Error] {line.rstrip()}")
+            else:
+                logger.info(f"[Codex Info] {line.rstrip()}")
+        
         for subtask in subtasks:
             context = TaskContext(
                 soul_profile=soul_meta,
@@ -291,6 +333,8 @@ class WorkerAgent(BaseAgent):
                 result = self.codex_manager.execute_task(
                     subtask.get("description", ""),
                     context,
+                    stream_output=True,
+                    output_callback=output_callback,
                     cwd=task.metadata.get("cwd"),
                 )
                 

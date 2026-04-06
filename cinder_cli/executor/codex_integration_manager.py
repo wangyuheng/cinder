@@ -101,6 +101,8 @@ class CodexIntegrationManager:
         self,
         task_description: str,
         context: TaskContext,
+        stream_output: bool = False,
+        output_callback: Optional[Callable[[str, str], None]] = None,
         **kwargs: Any
     ) -> CodexResult:
         """
@@ -109,6 +111,8 @@ class CodexIntegrationManager:
         Args:
             task_description: Description of the task to execute
             context: Task context including Soul profile and decision context
+            stream_output: Whether to stream output in real-time
+            output_callback: Optional callback for real-time output
             **kwargs: Additional task parameters
             
         Returns:
@@ -132,7 +136,11 @@ class CodexIntegrationManager:
         executor = self._select_executor(task)
         
         try:
-            result = executor.execute(task)
+            result = executor.execute(
+                task,
+                stream_output=stream_output,
+                output_callback=output_callback
+            )
             logger.info(f"Task executed successfully: {task_description[:100]}")
             return result
         except CodexError:

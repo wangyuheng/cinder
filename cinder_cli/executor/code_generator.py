@@ -4,17 +4,25 @@ Code Generator - Generates code using Ollama.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 import ollama
 
 from cinder_cli.config import Config
 from cinder_cli.executor.token_tracker import TokenTracker
 
+if TYPE_CHECKING:
+    from cinder_cli.tracing import LLMTracer
+
 
 class CodeGenerator:
     """Generates code using Ollama model."""
 
-    def __init__(self, config: Config, token_tracker: TokenTracker | None = None):
+    def __init__(
+        self,
+        config: Config,
+        token_tracker: TokenTracker | None = None,
+        llm_tracer: LLMTracer | None = None,
+    ):
         self.config = config
         self.model_name = config.get("model", "qwen3.5:0.8b")
         self.temperature = config.get("temperature", 0.2)
@@ -24,6 +32,7 @@ class CodeGenerator:
         self.debug = config.get("ollama_debug", False)
         self.client = ollama.Client(host=self.base_url)
         self.token_tracker = token_tracker
+        self.llm_tracer = llm_tracer
 
     def generate_code(
         self,
@@ -64,6 +73,45 @@ class CodeGenerator:
             print(f"  Keep Alive: {self.keep_alive}")
             print(f"  Stream: {self.stream}\n")
 
+        if self.llm_tracer:
+            with self.llm_tracer.trace_llm_call(
+                model=self.model_name,
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                model_params={"temperature": self.temperature},
+                phase="code_generation",
+                language=language,
+            ) as record:
+                code = self._execute_llm_call(messages, options, record)
+        else:
+            code = self._execute_llm_call(messages, options, None)
+
+        if self.debug:
+            print(f"\n[DEBUG] Ollama Response:")
+            print(f"  Code length: {len(code)} characters")
+            print(f"  First 200 chars: {code[:200]}...\n")
+
+        code = self._extract_code(code)
+
+        return code
+
+    def _execute_llm_call(
+        self,
+        messages: list[dict[str, str]],
+        options: dict[str, Any],
+        record: Any | None,
+    ) -> str:
+        """
+        Execute LLM call and handle streaming/non-streaming modes.
+        
+        Args:
+            messages: Chat messages
+            options: Model options
+            record: LLM call record (optional)
+            
+        Returns:
+            Generated code
+        """
         try:
             if self.stream:
                 code_chunks = []
@@ -88,27 +136,19 @@ class CodeGenerator:
                         val = chunk.prompt_eval_count
                         if val is not None:
                             input_tokens = val
-                            if self.debug:
-                                print(f"\n[DEBUG] Updated input_tokens: {input_tokens}")
                     elif "prompt_eval_count" in chunk:
                         val = chunk.get("prompt_eval_count")
                         if val is not None:
                             input_tokens = val
-                            if self.debug:
-                                print(f"\n[DEBUG] Updated input_tokens: {input_tokens}")
                     
                     if hasattr(chunk, 'eval_count'):
                         val = chunk.eval_count
                         if val is not None:
                             output_tokens = val
-                            if self.debug:
-                                print(f"\n[DEBUG] Updated output_tokens: {output_tokens}")
                     elif "eval_count" in chunk:
                         val = chunk.get("eval_count")
                         if val is not None:
                             output_tokens = val
-                            if self.debug:
-                                print(f"\n[DEBUG] Updated output_tokens: {output_tokens}")
                 
                 print()
                 code = "".join(code_chunks)
@@ -125,6 +165,9 @@ class CodeGenerator:
                         output_tokens=output_tokens,
                         model=self.model_name,
                     )
+                
+                if record and self.llm_tracer:
+                    self.llm_tracer.record_response(record, code, input_tokens, output_tokens)
             else:
                 response = self.client.chat(
                     model=self.model_name,
@@ -161,22 +204,18 @@ class CodeGenerator:
                         output_tokens=output_tokens,
                         model=self.model_name,
                     )
-
-            if self.debug:
-                print(f"\n[DEBUG] Ollama Response:")
-                print(f"  Code length: {len(code)} characters")
-                print(f"  First 200 chars: {code[:200]}...")
-                print(f"  Tokens: input={input_tokens}, output={output_tokens}\n")
-
-            # Extract code from markdown if present
-            code = self._extract_code(code)
-
+                
+                if record and self.llm_tracer:
+                    self.llm_tracer.record_response(record, code, input_tokens, output_tokens)
+            
             return code
-
+            
         except Exception as e:
-            error_msg = f"# Error generating code: {e}\n# Description: {description}"
+            error_msg = f"# Error generating code: {e}"
             if self.debug:
                 print(f"\n[DEBUG] Error: {e}\n")
+            if record:
+                record.error = str(e)
             return error_msg
 
     def generate_with_iterations(
@@ -203,6 +242,62 @@ class CodeGenerator:
         best_code = None
         best_score = 0.0
         iteration_history = []
+
+        if self.llm_tracer:
+            with self.llm_tracer.trace_llm_call(
+                model=self.model_name,
+                prompt=description,
+                model_params={"max_iterations": max_iterations, "quality_threshold": quality_threshold},
+                phase="iterative_generation",
+                language=language,
+            ) as record:
+                result = self._execute_iterations(
+                    description, language, constraints, max_iterations, quality_threshold,
+                    iteration_history
+                )
+                if record:
+                    self.llm_tracer.record_response(
+                        record,
+                        result.get("code", ""),
+                        0,
+                        0
+                    )
+                    record.metadata["iterations"] = result.get("iterations", 0)
+                    record.metadata["final_score"] = result.get("final_score", 0)
+                return result
+        else:
+            return self._execute_iterations(
+                description, language, constraints, max_iterations, quality_threshold,
+                iteration_history
+            )
+
+    def _execute_iterations(
+        self,
+        description: str,
+        language: str,
+        constraints: dict[str, Any] | None,
+        max_iterations: int,
+        quality_threshold: float,
+        iteration_history: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """
+        Execute iterative code generation.
+        
+        Args:
+            description: Task description
+            language: Programming language
+            constraints: Optional constraints
+            max_iterations: Maximum number of iterations
+            quality_threshold: Minimum quality score required
+            iteration_history: List to store iteration history
+            
+        Returns:
+            Generation result with code and metadata
+        """
+        best_code = None
+        best_score = 0.0
+        previous_code = None
+        evaluation = None
 
         for iteration in range(max_iterations):
             if iteration == 0:

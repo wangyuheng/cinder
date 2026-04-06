@@ -4,18 +4,26 @@ Task Planner - Decomposes goals into executable subtasks.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 import json
 import ollama
 
 from cinder_cli.config import Config
 from cinder_cli.executor.token_tracker import TokenTracker
 
+if TYPE_CHECKING:
+    from cinder_cli.tracing import LLMTracer
+
 
 class TaskPlanner:
     """Decomposes complex goals into executable subtasks."""
 
-    def __init__(self, config: Config, token_tracker: TokenTracker | None = None):
+    def __init__(
+        self,
+        config: Config,
+        token_tracker: TokenTracker | None = None,
+        llm_tracer: LLMTracer | None = None,
+    ):
         self.config = config
         self.model_name = config.get("model", "qwen3.5:0.8b")
         self.temperature = config.get("temperature", 0.2)
@@ -24,6 +32,7 @@ class TaskPlanner:
         self.debug = config.get("ollama_debug", False)
         self.client = ollama.Client(host=self.base_url)
         self.token_tracker = token_tracker
+        self.llm_tracer = llm_tracer
 
     def understand_goal_with_llm(
         self,
@@ -67,6 +76,50 @@ class TaskPlanner:
 
 请提取关键信息并返回JSON格式的分析结果。"""
 
+        if self.llm_tracer:
+            with self.llm_tracer.trace_llm_call(
+                model=self.model_name,
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                model_params={"temperature": 0.3},
+                phase="goal_understanding",
+                goal=goal,
+            ) as record:
+                result = self._execute_understand_llm_call(
+                    goal, constraints, system_prompt, user_prompt
+                )
+                if record and result.get("success"):
+                    self.llm_tracer.record_response(
+                        record,
+                        result.get("raw_response", ""),
+                        result.get("input_tokens", 0),
+                        result.get("output_tokens", 0)
+                    )
+                return result
+        else:
+            return self._execute_understand_llm_call(
+                goal, constraints, system_prompt, user_prompt
+            )
+
+    def _execute_understand_llm_call(
+        self,
+        goal: str,
+        constraints: dict[str, Any] | None,
+        system_prompt: str,
+        user_prompt: str,
+    ) -> dict[str, Any]:
+        """
+        Execute LLM call for goal understanding.
+        
+        Args:
+            goal: Goal to understand
+            constraints: Optional constraints
+            system_prompt: System prompt
+            user_prompt: User prompt
+            
+        Returns:
+            Understanding result
+        """
         try:
             if self.debug:
                 print(f"\n[DEBUG] TaskPlanner LLM Request:")
@@ -141,6 +194,8 @@ class TaskPlanner:
                 "understanding": understanding,
                 "raw_response": content,
                 "success": True,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
             }
 
         except Exception as e:
@@ -153,6 +208,98 @@ class TaskPlanner:
                 "error": str(e),
                 "success": False,
             }
+
+    def infer_project_name(
+        self,
+        goal: str,
+        constraints: dict[str, Any] | None = None,
+    ) -> str:
+        """
+        Infer a suitable project name from the goal description.
+        
+        Args:
+            goal: Natural language goal description
+            constraints: Optional constraints
+            
+        Returns:
+            A suitable project directory name
+        """
+        import re
+        
+        system_prompt = """你是一个项目命名专家。根据用户的目标描述，生成一个合适的项目目录名称。
+
+要求：
+1. 名称应该简洁、有意义、易于理解
+2. 只使用小写字母、数字和连字符(-)
+3. 不要使用空格或特殊字符
+4. 名称应该反映项目的主要功能或目的
+5. 如果目标中包含具体的应用名称，优先使用它
+6. 名称长度建议在 3-30 个字符之间
+
+返回格式：
+{
+  "project_name": "项目名称",
+  "reasoning": "命名理由（简短说明）"
+}"""
+
+        user_prompt = f"""请为以下目标生成一个合适的项目名称：
+
+目标：{goal}
+
+约束条件：{constraints or '无'}
+
+请返回 JSON 格式的结果。"""
+
+        try:
+            response = self.client.chat(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                options={
+                    "temperature": 0.3,
+                    "num_ctx": 1024,
+                },
+                keep_alive=self.keep_alive,
+            )
+
+            content = response.message.content if hasattr(response, 'message') else response.get("message", {}).get("content", "")
+            
+            json_match = content
+            if "```json" in content:
+                json_match = content.split("```json")[1].split("```")[0].strip()
+            elif "```" in content:
+                json_match = content.split("```")[1].split("```")[0].strip()
+            
+            result = json.loads(json_match)
+            project_name = result.get("project_name", "project")
+            
+            project_name = re.sub(r'[^a-z0-9-]', '-', project_name.lower())
+            project_name = re.sub(r'-+', '-', project_name)
+            project_name = project_name.strip('-')
+            
+            if not project_name or len(project_name) < 2:
+                project_name = "project"
+            
+            if self.debug:
+                print(f"\n[DEBUG] Inferred project name: {project_name}")
+                print(f"[DEBUG] Reasoning: {result.get('reasoning', 'N/A')}")
+            
+            return project_name
+
+        except Exception as e:
+            if self.debug:
+                print(f"\n[DEBUG] Failed to infer project name: {e}")
+            
+            keywords = re.findall(r'[\u4e00-\u9fa5]+|[a-zA-Z]+', goal)
+            if keywords:
+                first_keyword = keywords[0].lower()
+                project_name = re.sub(r'[^a-z0-9-]', '-', first_keyword)
+                return project_name.strip('-') or "project"
+            
+            return "project"
+
 
     def decompose_goal_with_llm(
         self,
@@ -438,6 +585,53 @@ class TaskPlanner:
             max_retries: Maximum number of regeneration attempts
             quality_threshold: Minimum quality score required
 
+        Returns:
+            Validated task plan
+        """
+        if self.llm_tracer:
+            with self.llm_tracer.trace_llm_call(
+                model=self.model_name,
+                prompt=goal,
+                model_params={
+                    "max_retries": max_retries,
+                    "quality_threshold": quality_threshold,
+                },
+                phase="validated_decomposition",
+            ) as record:
+                result = self._execute_validation_decomposition(
+                    goal, constraints, max_retries, quality_threshold
+                )
+                if record:
+                    self.llm_tracer.record_response(
+                        record,
+                        str(result.get("subtasks", [])),
+                        0,
+                        0
+                    )
+                    record.metadata["validation_score"] = result.get("validation", {}).get("quality_score", 0)
+                    record.metadata["attempts"] = result.get("attempts", 1)
+                return result
+        else:
+            return self._execute_validation_decomposition(
+                goal, constraints, max_retries, quality_threshold
+            )
+
+    def _execute_validation_decomposition(
+        self,
+        goal: str,
+        constraints: dict[str, Any] | None,
+        max_retries: int,
+        quality_threshold: float,
+    ) -> dict[str, Any]:
+        """
+        Execute goal decomposition with validation.
+        
+        Args:
+            goal: Goal to decompose
+            constraints: Optional constraints
+            max_retries: Maximum retries
+            quality_threshold: Quality threshold
+            
         Returns:
             Validated task plan
         """
