@@ -5,6 +5,75 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## \[3.2.0] - 2026-04-06
+
+### 新增
+
+#### LLM/Agent 可观测性
+
+- **Phoenix 集成**: 集成 Arize Phoenix 实现完整的可观测性
+  - OpenTelemetry 标准追踪
+  - arize-phoenix-otel 包集成
+  - HTTP OTLP exporter
+  - BatchSpanProcessor 支持生产环境
+- **LLM 追踪**: 完整的 LLM 调用追踪
+  - Prompt 和 response 记录
+  - Token 使用统计
+  - 模型参数记录
+  - 执行时间追踪
+- **Agent 追踪**: Agent 执行追踪和聚合
+  - 任务级别的 span 聚合
+  - Phase 阶段追踪
+  - 分层 trace 结构
+  - 执行流程可视化
+- **OpenInference 支持**: 遵循 OpenInference 语义约定
+  - llm.input_messages (扁平化格式)
+  - llm.output_messages (扁平化格式)
+  - llm.token_count.*
+  - openinference.span.kind
+- **Phase 追踪**: 业务阶段追踪
+  - Plan phase 追踪
+  - Generation phase 追踪
+  - Evaluation phase 追踪
+  - 阶段执行时间和质量记录
+- **配置系统**: 完整的可观测性配置
+  - 启用/禁用开关
+  - Phoenix endpoint 配置
+  - 项目名称配置
+  - 服务名称配置
+- **服务管理**: Phoenix 服务管理脚本
+  - Docker 容器启动/停止
+  - 服务状态检查
+  - 日志查看
+  - 数据持久化
+- **测试**: 完整的测试套件
+  - 单元测试
+  - 性能测试
+  - 集成测试
+- **文档**: 完整的可观测性文档
+  - 开发指南
+  - 环境管理
+  - 可观测性指南
+  - 服务管理
+  - 验证指南
+
+### 改进
+
+- 执行器集成追踪功能
+- CodeGenerator 集成 LLM 追踪
+- TaskPlanner 集成 LLM 追踪
+- ReflectionEngine 集成 LLM 追踪
+- 错误处理更加健壮
+
+### 技术细节
+
+- 使用 arize-phoenix-otel 包实现 Phoenix 集成
+- 使用 OpenTelemetry SDK 进行追踪
+- 使用 BatchSpanProcessor 优化性能
+- 使用 OpenInference 语义约定确保兼容性
+- 支持 HTTP OTLP exporter
+- 支持扁平化的消息属性格式
+
 ## \[3.1.0] - 2026-04-05
 
 ### 新增
