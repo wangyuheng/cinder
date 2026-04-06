@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Any, Iterator, Optional
 
 from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
 
 from .phoenix_tracer import PhoenixTracer
 
@@ -149,12 +150,14 @@ class AgentTracer:
                     
                     span.set_attribute("agent.status", "completed")
                     span.set_attribute("agent.duration_ms", record.duration_ms)
+                    span.set_status(Status(StatusCode.OK))
                     
                 except Exception as e:
                     record.status = "failed"
                     record.error = str(e)
                     span.set_attribute("agent.status", "failed")
                     span.set_attribute("agent.error", str(e))
+                    span.set_status(Status(StatusCode.ERROR, str(e)))
                     span.record_exception(e)
                     raise
         else:
@@ -225,12 +228,14 @@ class AgentTracer:
                     
                     span.set_attribute("agent.status", "completed")
                     span.set_attribute("agent.duration_ms", record.duration_ms)
+                    span.set_status(Status(StatusCode.OK))
                     
                 except Exception as e:
                     record.status = "failed"
                     record.error = str(e)
                     span.set_attribute("agent.status", "failed")
                     span.set_attribute("agent.error", str(e))
+                    span.set_status(Status(StatusCode.ERROR, str(e)))
                     span.record_exception(e)
                     raise
         else:

@@ -242,4 +242,4 @@ soul_meta = {
 
 ## Migration from Legacy
 
-See [Migration Guide](./migration-guide.md) for details on migrating from the old architecture.
+See [Migration Guide](./ARCHITECTURE_MIGRATION_GUIDE.md) for details on migrating from the old architecture.

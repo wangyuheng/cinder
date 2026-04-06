@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Any, Iterator, Optional
 
 from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
 
 from .phoenix_tracer import PhoenixTracer
 
@@ -127,10 +128,8 @@ class LLMTracer:
                     record.duration_ms = (time.time() - start_time) * 1000
                     
                     if record.response:
-                        # Use flattened output messages format
                         span.set_attribute("llm.output_messages.0.message.role", "assistant")
                         span.set_attribute("llm.output_messages.0.message.content", record.response)
-                        # Add output.value for Phoenix UI
                         span.set_attribute("output.value", record.response)
                     
                     if record.input_tokens > 0:
@@ -139,8 +138,11 @@ class LLMTracer:
                         span.set_attribute("llm.token_count.completion", record.output_tokens)
                     if record.total_tokens > 0:
                         span.set_attribute("llm.token_count.total", record.total_tokens)
+                    
+                    span.set_status(Status(StatusCode.OK))
                 except Exception as e:
                     span.record_exception(e)
+                    span.set_status(Status(StatusCode.ERROR, str(e)))
                     record.error = str(e)
                     raise
         else:

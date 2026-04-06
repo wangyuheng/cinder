@@ -126,3 +126,63 @@ async def get_estimation_stats() -> dict[str, Any]:
         "statistics": stats,
         "timestamp": asyncio.get_event_loop().time(),
     }
+
+
+@router.get("/active/monitor")
+async def monitor_active_executions() -> StreamingResponse:
+    """
+    Monitor all active executions in real-time.
+    
+    Returns:
+        StreamingResponse with SSE events containing all active executions
+    """
+    logger = get_logger()
+    
+    async def event_stream():
+        while True:
+            try:
+                all_executions = logger.list_executions(limit=100)
+                active_executions = [
+                    exec for exec in all_executions
+                    if exec.get("status") in ["running", "pending", "in_progress"]
+                ]
+                
+                executions_data = []
+                for exec in active_executions:
+                    progress_data = exec.get("progress_data", {})
+                    speed_metrics = exec.get("speed_metrics", {})
+                    
+                    execution_info = {
+                        "execution_id": exec.get("id"),
+                        "goal": exec.get("goal", ""),
+                        "status": exec.get("status"),
+                        "progress": progress_data.get("overall_progress", 0) if progress_data else 0,
+                        "speed": speed_metrics.get("tasks_per_minute", 0) if speed_metrics else 0,
+                        "phase": progress_data.get("current_phase", "unknown") if progress_data else "unknown",
+                        "timestamp": exec.get("timestamp"),
+                        "elapsed": progress_data.get("elapsed_time") if progress_data else None,
+                        "remaining": progress_data.get("estimated_remaining") if progress_data else None,
+                    }
+                    executions_data.append(execution_info)
+                
+                data = {
+                    "executions": executions_data,
+                    "count": len(executions_data),
+                }
+                
+                yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+                await asyncio.sleep(2)
+            except Exception as e:
+                error_data = {"error": str(e)}
+                yield f"data: {json.dumps(error_data)}\n\n"
+                break
+    
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        }
+    )

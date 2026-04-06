@@ -407,15 +407,23 @@ def execute(
     try:
         result = executor.execute(goal, mode=mode, constraints=constraints)
         
+        click.echo(f"\n[DEBUG] 执行完成，状态: {result.get('status', 'unknown')}", err=True)
+        click.echo(f"[DEBUG] 结果类型: {type(result)}", err=True)
+        click.echo(f"[DEBUG] 结果键: {result.keys() if isinstance(result, dict) else 'N/A'}", err=True)
+        
         if result["status"] == "success":
             try:
+                click.echo("[DEBUG] 开始显示执行总结...", err=True)
                 _print_execution_summary(result)
+                click.echo("[DEBUG] 执行总结显示完成", err=True)
             except Exception as e:
                 import traceback
                 click.echo(f"\n✗ 显示执行总结失败: {e}", err=True)
                 click.echo(traceback.format_exc(), err=True)
         elif result["status"] == "dry-run":
             click.echo("\n预览完成，未创建实际文件")
+        else:
+            click.echo(f"\n[DEBUG] 未知的执行状态: {result.get('status')}", err=True)
     except Exception as e:
         import traceback
         click.echo(f"\n✗ 执行失败: {e}", err=True)
@@ -427,81 +435,87 @@ def _print_execution_summary(result: dict) -> None:
     from rich.console import Console
     from rich.table import Table
     from rich.panel import Panel
+    import sys
     
-    console = Console()
+    console = Console(file=sys.stdout, force_terminal=True)
     
-    console.print()
-    console.print(Panel.fit(
-        "[bold green]✓ 执行成功完成[/bold green]",
-        border_style="green"
-    ))
-    
-    table = Table(show_header=False, box=None, padding=(0, 2))
-    table.add_column("指标", style="cyan", width=20)
-    table.add_column("值", style="white")
-    
-    table.add_row("目标", result.get("goal", "N/A"))
-    
-    if "speed_metrics" in result:
-        speed = result["speed_metrics"]
-        table.add_row("执行速度", f"{speed.get('tasks_per_minute', 0):.1f} tasks/min")
-    
-    if "token_metrics" in result:
-        tokens = result["token_metrics"]
-        table.add_row("Token 使用", 
-            f"{tokens.get('total_tokens', 0)} "
-            f"(输入: {tokens.get('total_input_tokens', 0)}, "
-            f"输出: {tokens.get('total_output_tokens', 0)})")
-        table.add_row("Token 速度", f"{tokens.get('tokens_per_second', 0):.1f} tok/s")
-    
-    if "execution_flow" in result:
-        flow = result["execution_flow"]
-        if "plan" in flow and "subtasks" in flow["plan"]:
-            task_count = len(flow["plan"]["subtasks"])
-            table.add_row("任务数量", str(task_count))
-    
-    if "results" in result:
-        results = result["results"]
-        if isinstance(results, list):
-            file_count = len(results)
-            table.add_row("创建文件", str(file_count))
-            
-            if file_count > 0:
-                first_file = results[0] if isinstance(results[0], dict) else {}
-                file_path = first_file.get("file_path", "")
-                if file_path:
-                    from pathlib import Path
-                    try:
-                        file_path_obj = Path(file_path)
-                        if file_path_obj.is_absolute():
-                            project_dir = str(file_path_obj.parent)
-                        else:
-                            project_dir = str(Path.cwd() / file_path_obj.parent)
-                        
-                        if project_dir and project_dir != "." and project_dir != str(Path.cwd()):
-                            table.add_row("项目目录", project_dir)
-                    except Exception as e:
-                        pass
+    try:
+        console.print()
+        console.print(Panel.fit(
+            "[bold green]✓ 执行成功完成[/bold green]",
+            border_style="green"
+        ))
+        
+        table = Table(show_header=False, box=None, padding=(0, 2))
+        table.add_column("指标", style="cyan", width=20)
+        table.add_column("值", style="white")
+        
+        table.add_row("目标", result.get("goal", "N/A"))
+        
+        if "speed_metrics" in result:
+            speed = result["speed_metrics"]
+            table.add_row("执行速度", f"{speed.get('tasks_per_minute', 0):.1f} tasks/min")
+        
+        if "token_metrics" in result:
+            tokens = result["token_metrics"]
+            table.add_row("Token 使用", 
+                f"{tokens.get('total_tokens', 0)} "
+                f"(输入: {tokens.get('total_input_tokens', 0)}, "
+                f"输出: {tokens.get('total_output_tokens', 0)})")
+            table.add_row("Token 速度", f"{tokens.get('tokens_per_second', 0):.1f} tok/s")
+        
+        if "execution_flow" in result:
+            flow = result["execution_flow"]
+            if "plan" in flow and "subtasks" in flow["plan"]:
+                task_count = len(flow["plan"]["subtasks"])
+                table.add_row("任务数量", str(task_count))
+        
+        if "results" in result:
+            results = result["results"]
+            if isinstance(results, list):
+                file_count = len(results)
+                table.add_row("创建文件", str(file_count))
                 
-                console.print("\n[bold cyan]创建的文件:[/bold cyan]")
-                for i, file_result in enumerate(results[:5], 1):
-                    if isinstance(file_result, dict):
-                        file_path = file_result.get("file_path", "Unknown")
-                        console.print(f"  {i}. {file_path}")
-                
-                if file_count > 5:
-                    console.print(f"  ... 还有 {file_count - 5} 个文件")
-    
-    console.print(table)
-    
-    if "phase_timestamps" in result:
-        timestamps = result["phase_timestamps"]
-        if timestamps:
-            console.print("\n[dim]执行阶段时间:[/dim]")
-            for phase, ts in timestamps.items():
-                console.print(f"[dim]  • {phase}: {ts:.1f}s[/dim]")
-    
-    console.print()
+                if file_count > 0:
+                    first_file = results[0] if isinstance(results[0], dict) else {}
+                    file_path = first_file.get("file_path", "")
+                    if file_path:
+                        from pathlib import Path
+                        try:
+                            file_path_obj = Path(file_path)
+                            if file_path_obj.is_absolute():
+                                project_dir = str(file_path_obj.parent)
+                            else:
+                                project_dir = str(Path.cwd() / file_path_obj.parent)
+                            
+                            if project_dir and project_dir != "." and project_dir != str(Path.cwd()):
+                                table.add_row("项目目录", project_dir)
+                        except Exception as e:
+                            pass
+                    
+                    console.print("\n[bold cyan]创建的文件:[/bold cyan]")
+                    for i, file_result in enumerate(results[:5], 1):
+                        if isinstance(file_result, dict):
+                            file_path = file_result.get("file_path", "Unknown")
+                            console.print(f"  {i}. {file_path}")
+                    
+                    if file_count > 5:
+                        console.print(f"  ... 还有 {file_count - 5} 个文件")
+        
+        console.print(table)
+        
+        if "phase_timestamps" in result:
+            timestamps = result["phase_timestamps"]
+            if timestamps:
+                console.print("\n[dim]执行阶段时间:[/dim]")
+                for phase, ts in timestamps.items():
+                    console.print(f"[dim]  • {phase}: {ts:.1f}s[/dim]")
+        
+        console.print()
+    except Exception as e:
+        import traceback
+        click.echo(f"\n✗ 显示执行总结时出错: {e}", err=True)
+        click.echo(traceback.format_exc(), err=True)
 
 
 @cli.group()

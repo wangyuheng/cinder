@@ -49,12 +49,14 @@ class TaskPlanner:
         Returns:
             Understanding result with semantic components
         """
-        system_prompt = """你是一个任务分析专家。请分析用户的目标并提取以下信息：
-1. 主要目标类型（web应用、API、脚本、工具等）
-2. 关键功能需求
-3. 技术栈要求
-4. 隐含的依赖关系
-5. 复杂度评估
+        system_prompt = """你是一个项目架构师。请分析用户的目标并设计完整的项目结构。
+
+要求：
+1. 分析目标类型和关键功能
+2. 设计合理的文件结构（遵循最佳实践）
+3. 文件名必须使用英文、小写、下划线分隔（如：hello_world.py, code_executor.py）
+4. 明确文件之间的依赖关系
+5. 每个文件应该有清晰的职责
 
 请以JSON格式返回结果，格式如下：
 {
@@ -65,10 +67,32 @@ class TaskPlanner:
     "framework": "框架",
     "database": "数据库"
   },
+  "file_structure": [
+    {
+      "file_path": "main.py",
+      "description": "主程序入口",
+      "features": ["功能1"],
+      "dependencies": [],
+      "type": "code"
+    },
+    {
+      "file_path": "utils/helper.py",
+      "description": "辅助工具函数",
+      "features": ["功能2"],
+      "dependencies": [],
+      "type": "code"
+    }
+  ],
   "dependencies": ["依赖1", "依赖2"],
   "complexity": "low/medium/high",
   "estimated_tasks": 5
-}"""
+}
+
+重要提示：
+- file_path 必须是英文文件名，使用小写字母和下划线
+- 每个文件应该有明确的职责，避免功能混杂
+- 合理组织目录结构，如 utils/, models/, api/ 等
+- 考虑代码的可维护性和可扩展性"""
 
         user_prompt = f"""请分析以下目标：
 目标：{goal}
@@ -355,6 +379,31 @@ class TaskPlanner:
         Returns:
             List of subtasks
         """
+        file_structure = understanding.get("file_structure", [])
+        
+        if file_structure:
+            subtasks = []
+            for i, file_info in enumerate(file_structure, 1):
+                file_path = file_info.get("file_path", f"file_{i}.py")
+                language = self._infer_language_from_path(file_path)
+                
+                subtasks.append({
+                    "id": str(i),
+                    "description": file_info.get("description", ""),
+                    "type": file_info.get("type", "code"),
+                    "language": language,
+                    "file_path": file_path,
+                    "features": file_info.get("features", []),
+                    "dependencies": file_info.get("dependencies", []),
+                })
+            
+            if self.debug:
+                print(f"\n[DEBUG] Using LLM-designed file structure:")
+                for task in subtasks:
+                    print(f"  - {task['file_path']}: {task['description']}")
+            
+            return subtasks
+        
         goal_type = understanding.get("goal_type", "generic")
         key_features = understanding.get("key_features", [])
         tech_stack = understanding.get("tech_stack", {})
@@ -387,6 +436,47 @@ class TaskPlanner:
             )
 
         return subtasks
+
+    def _infer_language_from_path(self, file_path: str) -> str:
+        """
+        Infer programming language from file path.
+        
+        Args:
+            file_path: File path
+            
+        Returns:
+            Programming language
+        """
+        extension_map = {
+            ".py": "python",
+            ".js": "javascript",
+            ".ts": "typescript",
+            ".jsx": "javascript",
+            ".tsx": "typescript",
+            ".html": "html",
+            ".css": "css",
+            ".scss": "scss",
+            ".json": "json",
+            ".yaml": "yaml",
+            ".yml": "yaml",
+            ".md": "markdown",
+            ".sh": "bash",
+            ".go": "go",
+            ".rs": "rust",
+            ".java": "java",
+            ".kt": "kotlin",
+            ".swift": "swift",
+            ".rb": "ruby",
+            ".php": "php",
+            ".c": "c",
+            ".cpp": "cpp",
+            ".h": "c",
+            ".hpp": "cpp",
+        }
+        
+        import os
+        _, ext = os.path.splitext(file_path.lower())
+        return extension_map.get(ext, "python")
 
     def validate_plan(
         self,

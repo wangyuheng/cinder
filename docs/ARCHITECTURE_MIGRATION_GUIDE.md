@@ -246,6 +246,6 @@ executor = AutonomousExecutor(config, legacy_mode=True)
 ## Support
 
 For migration assistance:
-1. Check [Architecture Documentation](./architecture.md)
+1. Check [Architecture Documentation](./ARCHITECTURE.md)
 2. Review [Examples](./examples/)
 3. Open an issue on GitHub

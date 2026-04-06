@@ -31,6 +31,9 @@ from cinder_cli.executor.progress_snapshot import ProgressSnapshot
 from cinder_cli.executor.token_tracker import TokenTracker
 from cinder_cli.executor.ollama_health_checker import OllamaHealthChecker
 from cinder_cli.tracing import AgentTracer, LLMTracer, PhoenixTracer, TracingConfig
+from cinder_cli.agents.decision_agent import DecisionAgent
+from cinder_cli.agents.context_manager import ContextManager
+from cinder_cli.agents.base import Task
 
 console = Console()
 
@@ -336,6 +339,8 @@ class AutonomousExecutor:
             
             self.time_recorder.end_execution()
             progress_display.stop("Execution complete!")
+            
+            console.print()
             
             execution_flow["status"] = "success"
             
