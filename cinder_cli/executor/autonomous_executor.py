@@ -45,13 +45,11 @@ class AutonomousExecutor:
         self.config = config
         self.token_tracker = TokenTracker()
         
-        # Initialize tracing first
-        tracing_config = TracingConfig.from_dict(config.to_dict())
-        self.phoenix_tracer = PhoenixTracer.initialize(tracing_config)
+        self.tracing_config = TracingConfig.from_dict(config.to_dict())
+        self.phoenix_tracer = PhoenixTracer.initialize(self.tracing_config)
         self.llm_tracer = LLMTracer(self.phoenix_tracer)
         self.agent_tracer = AgentTracer(self.phoenix_tracer)
         
-        # Pass tracer to components
         self.task_planner = TaskPlanner(config, self.token_tracker, self.llm_tracer)
         self.code_generator = CodeGenerator(config, self.token_tracker, self.llm_tracer)
         self.reflection_engine = ReflectionEngine(config, self.llm_tracer)
@@ -68,6 +66,20 @@ class AutonomousExecutor:
         
         self.ollama_base_url = config.get("ollama_base_url", "http://localhost:11434")
         self.health_checker = OllamaHealthChecker(self.ollama_base_url)
+        
+        context_db_path = config.database_path.parent / "context.db"
+        self.context_manager = ContextManager(
+            db_path=context_db_path,
+            user_id=config.get("user_id", "default"),
+            project_id=config.get("project_id", "default"),
+        )
+        
+        self.decision_agent = DecisionAgent(
+            agent_id="main_decision_agent",
+            config=config,
+            soul_meta=self.soul_meta,
+            context_manager=self.context_manager,
+        )
         
         self._execution_id: int | None = None
         self._progress_enabled = config.get("progress_tracking", True)
@@ -402,6 +414,23 @@ class AutonomousExecutor:
                 if validation.get("issues"):
                     for issue in validation["issues"]:
                         console.print(f"  - {issue}")
+                
+                decision_result = self._handle_low_quality_plan(
+                    goal, constraints, plan, validation
+                )
+                
+                if decision_result.get("action") == "proceed":
+                    plan = decision_result.get("plan", plan)
+                    quality_score = decision_result.get("quality_score", quality_score)
+                elif decision_result.get("action") == "abort":
+                    return {
+                        "phase": "plan",
+                        "success": False,
+                        "plan": plan,
+                        "quality_score": quality_score,
+                        "attempts": plan.get("attempts", 1),
+                        "decision": decision_result,
+                    }
 
             console.print(f"[dim]Plan phase complete: {len(plan.get('subtasks', []))} tasks, quality={quality_score:.2f}[/dim]")
 
