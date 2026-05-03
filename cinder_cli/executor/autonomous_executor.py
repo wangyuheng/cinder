@@ -698,14 +698,201 @@ class AutonomousExecutor:
         reason: str,
         execution_flow: dict[str, Any],
     ) -> dict[str, Any]:
-        """Create a failure result."""
+        """Create a failure result with trace reporting."""
         console.print(f"\n[red]✗ 执行失败: {reason}[/red]")
+        
+        if self.agent_tracer and self.phoenix_tracer and self.phoenix_tracer.is_enabled():
+            try:
+                with self.agent_tracer.trace_phase(
+                    phase_name="failure",
+                    parent_task_id="autonomous_executor",
+                    reason=reason,
+                    goal=goal,
+                ) as record:
+                    if record:
+                        record.metadata["failure_reason"] = reason
+                        record.metadata["execution_flow_status"] = execution_flow.get("status")
+                        record.metadata["goal"] = goal
+                        record.error = reason
+            except Exception as e:
+                console.print(f"[dim]Failed to report failure to trace: {e}[/dim]")
+        
         return {
             "status": "failed",
             "goal": goal,
             "reason": reason,
             "execution_flow": execution_flow,
         }
+    
+    def _handle_low_quality_plan(
+        self,
+        goal: str,
+        constraints: dict[str, Any] | None,
+        plan: dict[str, Any],
+        validation: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Handle low quality plan by consulting DecisionAgent.
+        
+        Args:
+            goal: Original goal
+            constraints: Optional constraints
+            plan: The low quality plan
+            validation: Validation result
+            
+        Returns:
+            Decision result with action to take
+        """
+        quality_score = validation.get("quality_score", 0)
+        issues = validation.get("issues", [])
+        
+        console.print(f"\n[cyan]🧠 咨询决策Agent处理低质量计划...[/cyan]")
+        
+        context = f"处理低质量计划 (质量分: {quality_score:.2f}, 问题: {', '.join(issues[:3])})"
+        
+        try:
+            decision = self.decision_agent.make_simple_decision(
+                context=context,
+                quality_score=quality_score,
+                issues=issues,
+            )
+            
+            decision_type = decision.decision_type
+            selected_option = decision.selected_option
+            
+            console.print(f"[dim]决策: {decision_type} - {selected_option.get('action', 'unknown')}[/dim]")
+            console.print(f"[dim]理由: {decision.reasoning}[/dim]")
+            
+            if decision_type == "accept":
+                return {
+                    "action": "proceed",
+                    "plan": plan,
+                    "quality_score": quality_score,
+                    "decision": decision.to_dict(),
+                    "reasoning": decision.reasoning,
+                }
+            elif decision_type == "retry_current":
+                max_retries = selected_option.get("max_retries", 2)
+                adjust_params = selected_option.get("adjust_params", False)
+                final_attempt = selected_option.get("final_attempt", False)
+                
+                retry_constraints = constraints or {}
+                if adjust_params:
+                    retry_constraints["retry_mode"] = "adjusted_params"
+                    retry_constraints["previous_issues"] = issues
+                
+                retry_plan = self.task_planner.decompose_goal_with_validation(
+                    goal=goal,
+                    constraints=retry_constraints,
+                    max_retries=max_retries,
+                    quality_threshold=0.7,
+                )
+                
+                retry_quality = retry_plan.get("validation", {}).get("quality_score", 0)
+                
+                if final_attempt and retry_quality < 0.5:
+                    return {
+                        "action": "abort",
+                        "plan": retry_plan,
+                        "quality_score": retry_quality,
+                        "decision": decision.to_dict(),
+                        "reasoning": f"Final retry failed with quality {retry_quality:.2f}. {decision.reasoning}",
+                    }
+                
+                return {
+                    "action": "proceed",
+                    "plan": retry_plan,
+                    "quality_score": retry_quality,
+                    "decision": decision.to_dict(),
+                    "reasoning": f"Retried with adjusted parameters. {decision.reasoning}",
+                }
+            elif decision_type == "delegate_other":
+                console.print(f"[yellow]⚠ 委托其他Worker功能需要配置多个模型，当前使用备用方案[/yellow]")
+                
+                alternative_constraints = constraints or {}
+                alternative_constraints["delegation_mode"] = True
+                alternative_constraints["alternative_approach"] = selected_option.get("reason", "Alternative perspective needed")
+                
+                alternative_plan = self.task_planner.decompose_goal_with_validation(
+                    goal=goal,
+                    constraints=alternative_constraints,
+                    max_retries=2,
+                    quality_threshold=0.7,
+                )
+                
+                alternative_quality = alternative_plan.get("validation", {}).get("quality_score", 0)
+                
+                return {
+                    "action": "proceed" if alternative_quality >= 0.5 else "abort",
+                    "plan": alternative_plan,
+                    "quality_score": alternative_quality,
+                    "decision": decision.to_dict(),
+                    "reasoning": f"Alternative approach generated. {decision.reasoning}",
+                }
+            elif decision_type == "abort":
+                abort_reason = selected_option.get("reason", "Quality too low")
+                console.print(f"\n[red]⚠️ 任务终止[/red]")
+                console.print(f"[red]原因: {abort_reason}[/red]")
+                console.print(f"[red]问题: {', '.join(issues)}[/red]")
+                
+                return {
+                    "action": "abort",
+                    "plan": plan,
+                    "quality_score": quality_score,
+                    "decision": decision.to_dict(),
+                    "reasoning": f"Task aborted: {abort_reason}. {decision.reasoning}",
+                    "abort_details": {
+                        "reason": abort_reason,
+                        "issues": issues,
+                        "quality_score": quality_score,
+                    },
+                }
+            else:
+                return {
+                    "action": "abort",
+                    "decision": decision.to_dict(),
+                    "reasoning": f"Unknown decision type: {decision_type}",
+                }
+            
+        except Exception as e:
+            console.print(f"[red]决策Agent执行失败: {e}[/red]")
+            import traceback
+            console.print(f"[dim]{traceback.format_exc()}[/dim]")
+            return {
+                "action": "abort",
+                "error": str(e),
+                "reasoning": "DecisionAgent execution failed",
+            }
+    
+    def _improve_plan_with_feedback(
+        self,
+        goal: str,
+        constraints: dict[str, Any] | None,
+        plan: dict[str, Any],
+        issues: list[str],
+    ) -> dict[str, Any]:
+        """
+        Improve plan based on feedback.
+        
+        Args:
+            goal: Original goal
+            constraints: Optional constraints
+            plan: The plan to improve
+            issues: List of issues identified
+            
+        Returns:
+            Improved plan
+        """
+        enhanced_constraints = constraints or {}
+        enhanced_constraints["improvement_feedback"] = issues
+        enhanced_constraints["previous_plan"] = plan.get("subtasks", [])
+        
+        return self.task_planner.decompose_goal_with_validation(
+            goal=goal,
+            constraints=enhanced_constraints,
+            max_retries=1,
+            quality_threshold=0.7,
+        )
 
     def _interactive_run(
         self,

@@ -73,7 +73,7 @@ QUESTIONS = (
     ),
     Question(
         key="q4",
-        title="在"稳妥收益"和"高波动高回报"之间，你通常怎么选？",
+        title='在"稳妥收益"和"高波动高回报"之间，你通常怎么选？',
         prompt="面对收益与风险的权衡时，你更常见的选择是：",
         dimension="风险偏好",
         options=(
@@ -85,7 +85,7 @@ QUESTIONS = (
     ),
     Question(
         key="q5",
-        title="你最自然的"恢复能量"方式是什么？",
+        title='你最自然的"恢复能量"方式是什么？',
         prompt="经历一周高压后，你终于有一个完整空档。你更想：",
         dimension="能量恢复",
         options=(
@@ -104,7 +104,7 @@ QUESTIONS = (
             Option("A", "把目标拆得更细，靠纪律和系统继续推进", {"discipline_drive": 16, "structure": 10, "meaning_drive": -4}, "靠纪律和节奏维持推进"),
             Option("B", "重新定义目标，但保留前进节奏", {"adaptability": 14, "exploration": 8, "discipline_drive": 4}, "换路径，不轻易停下"),
             Option("C", "找外部监督或伙伴，让自己被推动", {"relationship_orientation": 10, "social_energy": 8, "discipline_drive": 6, "reassurance_need": 4}, "借助他律和陪伴重启"),
-            Option("D", "先回到"我为什么想要它"，重新确认意义", {"meaning_drive": 18, "evidence_orientation": 4, "discipline_drive": -4}, "先重连意义，再恢复投入"),
+            Option("D", '先回到"我为什么想要它"，重新确认意义', {"meaning_drive": 18, "evidence_orientation": 4, "discipline_drive": -4}, "先重连意义，再恢复投入"),
         ),
     ),
 )

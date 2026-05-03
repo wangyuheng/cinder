@@ -1,0 +1,14 @@
+codes:
+  - code: "WELCOME2024"
+    is_single_use: false
+    max_uses: 100
+    description: "2024年通用邀请码"
+  
+  - code: "BETA-TESTER"
+    is_single_use: true
+    description: "Beta测试专用邀请码"
+  
+  - code: "EARLY-BIRD"
+    is_single_use: false
+    max_uses: 50
+    description: "早期用户邀请码"

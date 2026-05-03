@@ -346,3 +346,216 @@ class DecisionAgent(BaseAgent):
                     "reasoning": decision.reasoning,
                 }
         return None
+    
+    def make_simple_decision(
+        self,
+        context: str,
+        quality_score: float,
+        issues: list[str],
+    ) -> Decision:
+        """
+        Make a simple decision without requiring worker agent.
+        
+        This is useful for making quick decisions about plan quality
+        without going through the full decision loop.
+        
+        Decision options:
+        - accept: Accept the current plan
+        - retry_current: Let current worker retry with adjusted parameters
+        - delegate_other: Delegate to a different worker/model
+        - abort: Terminate task with clear reasoning (used cautiously)
+        
+        Args:
+            context: Decision context description
+            quality_score: Quality score of the item being evaluated
+            issues: List of issues identified
+            
+        Returns:
+            Decision object
+        """
+        traits = self.soul_meta.get("traits", {})
+        risk_tolerance = traits.get("risk_tolerance", 50)
+        adaptability = traits.get("adaptability", 50)
+        discipline_drive = traits.get("discipline_drive", 50)
+        action_bias = traits.get("action_bias", 50)
+        
+        decision_type = "retry_current"
+        selected_option = {"action": "retry_current"}
+        reasoning = f"Quality score {quality_score:.2f} - will retry with adjustments"
+        
+        if quality_score >= 0.8:
+            decision_type = "accept"
+            selected_option = {"action": "accept"}
+            reasoning = f"Quality score {quality_score:.2f} meets high threshold"
+        elif quality_score >= 0.6:
+            if discipline_drive > 65:
+                decision_type = "retry_current"
+                selected_option = {"action": "retry_current", "max_retries": 2}
+                reasoning = f"Quality {quality_score:.2f} - retry with current worker (discipline focus: {discipline_drive})"
+            elif adaptability > 65:
+                decision_type = "delegate_other"
+                selected_option = {"action": "delegate_other", "reason": "Try different approach"}
+                reasoning = f"Quality {quality_score:.2f} - delegate to alternative worker (high adaptability: {adaptability})"
+            else:
+                decision_type = "retry_current"
+                selected_option = {"action": "retry_current", "max_retries": 1}
+                reasoning = f"Quality {quality_score:.2f} - conservative retry"
+        elif quality_score >= 0.4:
+            if risk_tolerance > 65:
+                decision_type = "retry_current"
+                selected_option = {"action": "retry_current", "max_retries": 3, "adjust_params": True}
+                reasoning = f"Quality {quality_score:.2f} - aggressive retry (high risk tolerance: {risk_tolerance})"
+            elif adaptability > 60:
+                decision_type = "delegate_other"
+                selected_option = {"action": "delegate_other", "reason": "Need different perspective"}
+                reasoning = f"Quality {quality_score:.2f} - try alternative approach (adaptability: {adaptability})"
+            elif action_bias > 60:
+                decision_type = "retry_current"
+                selected_option = {"action": "retry_current", "max_retries": 2, "quick_iteration": True}
+                reasoning = f"Quality {quality_score:.2f} - quick retry iteration (action bias: {action_bias})"
+            else:
+                decision_type = "abort"
+                selected_option = {"action": "abort", "reason": "Quality too low, resources better spent elsewhere"}
+                reasoning = f"Quality {quality_score:.2f} too low - abort to save resources (cautious approach)"
+        else:
+            if risk_tolerance < 35 and discipline_drive > 65:
+                decision_type = "retry_current"
+                selected_option = {"action": "retry_current", "max_retries": 1, "final_attempt": True}
+                reasoning = f"Quality {quality_score:.2f} very low - one final attempt before abort (disciplined: {discipline_drive})"
+            elif adaptability > 70:
+                decision_type = "delegate_other"
+                selected_option = {"action": "delegate_other", "reason": "Last resort alternative"}
+                reasoning = f"Quality {quality_score:.2f} critically low - try alternative as last resort"
+            else:
+                decision_type = "abort"
+                selected_option = {
+                    "action": "abort",
+                    "reason": f"Quality {quality_score:.2f} critically low, multiple issues: {', '.join(issues[:3])}",
+                    "issues": issues,
+                }
+                reasoning = f"Quality {quality_score:.2f} critically low - abort with clear reasoning"
+        
+        if traits:
+            risk_tolerance = traits.get("risk_tolerance", 50)
+            
+            if quality_score >= 0.7:
+                decision_options = [
+                    {
+                        "text": "接受计划",
+                        "action": "accept",
+                        "risk": "low",
+                        "quality": quality_score,
+                        "description": "质量达标，接受当前计划",
+                    },
+                    {
+                        "text": "当前Worker重试",
+                        "action": "retry_current",
+                        "risk": "low",
+                        "quality": 0.75,
+                        "description": "进一步优化（可选）",
+                    },
+                ]
+            elif quality_score >= 0.5:
+                decision_options = [
+                    {
+                        "text": "当前Worker重试",
+                        "action": "retry_current",
+                        "risk": "low",
+                        "quality": 0.75,
+                        "description": "调整参数后重试（推荐）",
+                    },
+                    {
+                        "text": "委托其他Worker",
+                        "action": "delegate_other",
+                        "risk": "medium",
+                        "quality": 0.7,
+                        "description": "尝试不同方法",
+                    },
+                    {
+                        "text": "接受计划",
+                        "action": "accept",
+                        "risk": "medium",
+                        "quality": quality_score,
+                        "description": "接受当前质量",
+                    },
+                ]
+            elif quality_score >= 0.3:
+                decision_options = [
+                    {
+                        "text": "当前Worker重试",
+                        "action": "retry_current",
+                        "risk": "medium",
+                        "quality": 0.75,
+                        "description": "多次重试改进",
+                    },
+                    {
+                        "text": "委托其他Worker",
+                        "action": "delegate_other",
+                        "risk": "medium",
+                        "quality": 0.7,
+                        "description": "尝试替代方案",
+                    },
+                    {
+                        "text": "终止任务",
+                        "action": "abort",
+                        "risk": "high",
+                        "quality": 0.0,
+                        "description": "质量过低，终止任务",
+                    },
+                ]
+            else:
+                decision_options = [
+                    {
+                        "text": "委托其他Worker",
+                        "action": "delegate_other",
+                        "risk": "medium",
+                        "quality": 0.7,
+                        "description": "最后尝试替代方案",
+                    },
+                    {
+                        "text": "终止任务",
+                        "action": "abort",
+                        "risk": "high",
+                        "quality": 0.0,
+                        "description": "质量严重不足，终止任务",
+                    },
+                ]
+            
+            proxy_decision = self.decision_maker.make_decision(context, decision_options)
+            
+            if proxy_decision and proxy_decision.get("decision"):
+                selected_text = proxy_decision["decision"].get("text", "")
+                selected_action = proxy_decision["decision"].get("action", "")
+                confidence = proxy_decision.get("confidence", 0.5)
+                
+                if "接受" in selected_text or selected_action == "accept":
+                    decision_type = "accept"
+                    selected_option = {"action": "accept"}
+                elif "重试" in selected_text or selected_action == "retry_current":
+                    decision_type = "retry_current"
+                    selected_option = {"action": "retry_current", "max_retries": 2}
+                elif "委托" in selected_text or selected_action == "delegate_other":
+                    decision_type = "delegate_other"
+                    selected_option = {"action": "delegate_other", "reason": "Alternative approach needed"}
+                elif "终止" in selected_text or selected_action == "abort":
+                    decision_type = "abort"
+                    selected_option = {
+                        "action": "abort",
+                        "reason": f"User decision via Soul profile (confidence: {confidence:.2f})",
+                        "issues": issues,
+                    }
+                
+                reasoning = f"Soul-guided decision: {selected_text} (confidence: {confidence:.2f})"
+                
+                if decision_type == "abort":
+                    reasoning += " [CAUTION] This action will terminate the task"
+        
+        decision = self._create_decision(
+            decision_type=decision_type,
+            context=context,
+            selected_option=selected_option,
+        )
+        
+        decision.reasoning = reasoning
+        
+        return decision

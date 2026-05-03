@@ -43,6 +43,9 @@ class Config:
         "enable_iterative_generation": True,
         "enable_plan_validation": True,
         "enable_comprehensive_evaluation": True,
+        "database_path": "~/.cinder/cinder.db",
+        "session_expires_days": 7,
+        "invitations_path": "~/.cinder/invitations.yaml",
         "codex_integration": {
             "enabled": False,
             "fallback_on_error": True,
